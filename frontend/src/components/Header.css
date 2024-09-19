@@ -1,0 +1,35 @@
+.container {
+  /* max-width: 1280px; */
+  padding: 1.5rem 2rem;
+  /* background-color: rgb(247, 167, 62); */
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 20px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.h1 {
+  color: red;
+}
+
+.reg-btn,
+.signin-btn {
+  border-radius: 30px;
+  padding: 0.6rem 1.2rem;
+  font-size: 18px;
+  font-weight: 600;
+  color: whitesmoke;
+  border: none;
+  cursor: pointer;
+}
+
+.reg-btn {
+  background-color: #ff7373;
+  border-color: #ff7373;
+}
+
+.signin-btn {
+  background-color: #73abff;
+  border-color: #73abff;
+}
