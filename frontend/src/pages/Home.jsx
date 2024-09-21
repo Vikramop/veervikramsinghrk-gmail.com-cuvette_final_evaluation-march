@@ -1,48 +1,49 @@
 import React, { useRef, useState } from 'react';
 import Header from '../components/Header';
+import Modal from '../components/Modal';
 import './Home.css';
 
 const Home = () => {
-  const feeds = [
-    {
-      heading: 'Delicious Pasta Recipes',
-      description: 'Learn to cook amazing pasta dishes from around the world.',
-      image:
-        'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-    },
-    {
-      heading: 'Healthy Salads to Keep You Fit',
-      description: 'Explore these refreshing and nutritious salad ideas.',
-      image:
-        'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-    },
-    {
-      heading: 'The Art of Pizza Making',
-      description: 'Master the secrets of making the perfect pizza at home.',
-      image:
-        'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-    },
-    {
-      heading: 'Top 10 Desserts for Sweet Lovers',
-      description: 'Indulge in these irresistible dessert recipes.',
-      image:
-        'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-    },
-    {
-      heading: 'Gourmet Burgers You Can Make at Home',
-      description: 'Upgrade your burger game with these gourmet ideas.',
-      image:
-        'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-    },
-    {
-      heading: 'Vegan Dishes Everyone Will Love',
-      description: 'Delicious vegan meals that even non-vegans will enjoy.',
-      image:
-        'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-    },
-  ];
+  // const feeds = [
+  //   {
+  //     heading: 'Delicious Pasta Recipes',
+  //     description: 'Learn to cook amazing pasta dishes from around the world.',
+  //     image:
+  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
+  //   },
+  //   {
+  //     heading: 'Healthy Salads to Keep You Fit',
+  //     description: 'Explore these refreshing and nutritious salad ideas.',
+  //     image:
+  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
+  //   },
+  //   {
+  //     heading: 'The Art of Pizza Making',
+  //     description: 'Master the secrets of making the perfect pizza at home.',
+  //     image:
+  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
+  //   },
+  //   {
+  //     heading: 'Top 10 Desserts for Sweet Lovers',
+  //     description: 'Indulge in these irresistible dessert recipes.',
+  //     image:
+  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
+  //   },
+  //   {
+  //     heading: 'Gourmet Burgers You Can Make at Home',
+  //     description: 'Upgrade your burger game with these gourmet ideas.',
+  //     image:
+  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
+  //   },
+  //   {
+  //     heading: 'Vegan Dishes Everyone Will Love',
+  //     description: 'Delicious vegan meals that even non-vegans will enjoy.',
+  //     image:
+  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
+  //   },
+  // ];
 
-  // const feeds = [];
+  const feeds = [];
   const filterRef = useRef(null);
 
   // const feedall = true;

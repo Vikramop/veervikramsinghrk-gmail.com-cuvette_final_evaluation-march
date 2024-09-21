@@ -80,3 +80,22 @@ export const logout = async (req, res) => {
   res.clearCookie('token');
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
+
+export const checkAuth = async (req, res) => {
+  try {
+    const user = await User.findById(req.uesrId);
+    if (!user) {
+      return res.status(400).json({ sucess: false, message: 'User not found' });
+    }
+    res.status(200).json({
+      sucess: true,
+      user: {
+        ...user._doc,
+        password: undefined,
+      },
+    });
+  } catch (error) {
+    console.log('Error in checkAuth', error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

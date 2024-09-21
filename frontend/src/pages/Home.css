@@ -63,7 +63,6 @@
   margin: 30px 0;
   padding: 30px 0;
   height: 70vh;
-  background-color: antiquewhite;
 }
 
 .h4 {
@@ -76,8 +75,9 @@
   justify-content: center;
   align-items: center;
   font-size: 30px;
+  font-weight: 600;
   color: #8e8e8e;
-  background: #000;
+  /* background: #000; */
   height: 100%;
 }
 
