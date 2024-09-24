@@ -67,12 +67,17 @@ export const login = async (req, res) => {
       user: {
         ...user._doc,
         password: undefined,
+        isAuth: true,
         token,
       },
     });
   } catch (error) {
     console.log('Error in login', error);
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({
+      success: false,
+      message: error.message,
+      user: { isAuth: false },
+    });
   }
 };
 
@@ -83,12 +88,19 @@ export const logout = async (req, res) => {
 
 export const checkAuth = async (req, res) => {
   try {
-    const user = await User.findById(req.uesrId);
+    console.log('req.userId:', req.userId); // Check the userId
+
+    const user = await User.findById(req.userId);
+    console.log('user', user);
+
     if (!user) {
-      return res.status(400).json({ sucess: false, message: 'User not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
     }
+
     res.status(200).json({
-      sucess: true,
+      success: true,
       user: {
         ...user._doc,
         password: undefined,
@@ -96,6 +108,6 @@ export const checkAuth = async (req, res) => {
     });
   } catch (error) {
     console.log('Error in checkAuth', error);
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };

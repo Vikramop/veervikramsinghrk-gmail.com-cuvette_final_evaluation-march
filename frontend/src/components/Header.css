@@ -22,6 +22,7 @@
   color: whitesmoke;
   border: none;
   cursor: pointer;
+  margin: 0 0.5rem;
 }
 
 .reg-btn {
@@ -32,4 +33,69 @@
 .signin-btn {
   background-color: #73abff;
   border-color: #73abff;
+}
+
+.header-items {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.profile-section {
+  position: relative;
+}
+
+.profile-pic {
+  background-color: #73abff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+.menu-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  background: whitesmoke;
+  top: 4.5rem;
+  padding: 1.4rem 3.3rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.bookmark-btn,
+.add-story-btn,
+.logout-btn {
+  padding: 0.5rem 1.6rem;
+  border: none;
+  border-radius: 15px;
+  background-color: #ff7373;
+  font-size: 16px;
+  color: white;
+  cursor: pointer;
+}
+.bookmark-btn {
+  padding: 0.5rem 1.8rem;
+}
+.hamburger-btn {
+  /* background: red; */
+  border: none;
+  cursor: pointer;
+}
+
+.book {
+  position: relative;
+}
+.book svg {
+  position: absolute;
+  left: 2px;
+  top: 5px;
+  margin: 0 2px;
+  cursor: pointer;
 }

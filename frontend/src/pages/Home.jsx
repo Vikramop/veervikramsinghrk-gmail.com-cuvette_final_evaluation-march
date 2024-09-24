@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import Header from '../components/Header';
-import Modal from '../components/Modal';
 import './Home.css';
 
 const Home = () => {

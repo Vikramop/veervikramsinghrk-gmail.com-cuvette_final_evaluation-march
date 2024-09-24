@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    isVerified: {
+    isAuth: {
       type: Boolean,
       default: false,
     },
