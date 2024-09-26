@@ -29,3 +29,17 @@ export const verifyToken = (req, res, next) => {
       .json({ success: false, message: 'Unauthorized - invalid token' });
   }
 };
+
+export const optionalVerifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.userId = decoded._id;
+    } catch (error) {
+      return res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+  }
+  next(); // Move forward if token is not there
+};
