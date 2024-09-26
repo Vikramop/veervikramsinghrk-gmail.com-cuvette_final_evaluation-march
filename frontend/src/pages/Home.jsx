@@ -104,6 +104,7 @@ const Home = () => {
         </div>
 
         <div className="filter-sec">
+          <div>{/* Display stories here */}</div>
           <h4 className="h4">Top Stories About food</h4>
 
           <div className={feeds.length > 0 ? 'feed' : 'nofeed'}>

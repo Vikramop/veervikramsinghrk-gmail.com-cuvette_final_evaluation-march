@@ -4,9 +4,11 @@ import Modal from './Modal';
 import { userAuthStore } from '../store/authStore.js';
 import { useNavigate } from 'react-router-dom';
 import pic from '../assets/happy.jpg';
+import CreateStoryModal from './CreateStoryModal .jsx';
 
 const Header = () => {
   const [showModal, setShowModal] = useState(false);
+  const [showStoryModal, setShowStoryModal] = useState(false);
   const [modalHeading, setModalHeading] = useState('');
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
@@ -69,7 +71,23 @@ const Header = () => {
                 <path d="M23,27l-8-7l-8,7V5c0-1.105,0.895-2,2-2h12c1.105,0,2,0.895,2,2V27z" />
               </svg>
             </div>
-            <button className="add-story-btn">Add Story</button>
+            <button
+              className="add-story-btn"
+              onClick={() => {
+                setShowStoryModal(true); // Show the new modal when button is clicked
+              }}
+            >
+              Add Story
+            </button>
+
+            {/* Conditionally render the modal */}
+            {showStoryModal && (
+              <CreateStoryModal
+                onClose={() => {
+                  setShowStoryModal(false); // Close the modal when onClose is called
+                }}
+              />
+            )}
             <img
               src={pic}
               // alt="Profile"

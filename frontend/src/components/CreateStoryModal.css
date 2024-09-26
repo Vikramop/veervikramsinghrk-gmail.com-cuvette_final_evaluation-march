@@ -1,0 +1,131 @@
+.modal-container {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(42, 41, 41, 0.859);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-modal {
+  background: #fff;
+  height: 400px;
+  width: 550px;
+  border: none;
+  border-radius: 20px;
+  padding: 1.5rem 1.5rem;
+  margin: auto;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 40px;
+  margin: 12px 0;
+  /* background: #847c7c; */
+  padding: 0 1rem;
+}
+.label {
+  font-size: 16px;
+  background: #ffffff;
+  width: 100px;
+  text-align: start;
+}
+
+.input::placeholder {
+  margin: 0 10px;
+}
+
+.tabs {
+  margin-top: 30px;
+  display: flex;
+  gap: 15px;
+  padding: 0.5rem 1rem;
+  /* background: rgb(255, 147, 147); */
+}
+
+.tab {
+  position: relative;
+  /* background: #8d7979; */
+  padding: 0.8rem 0.6rem;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 5px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  border: 3px solid #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.active {
+  border: 3px solid #73abff;
+}
+
+.cross {
+  position: absolute;
+  color: red;
+  top: 2px;
+  right: 2px;
+  cursor: pointer;
+}
+
+.prev-btn,
+.next-btn,
+.post-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 0.8rem 1.8rem;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+  color: white;
+}
+.prev-btn {
+  background: #7eff73;
+}
+
+.next-btn {
+  background: #73abff;
+}
+.post-btn {
+  background: #ff7373;
+}
+.modal-actions {
+  padding: 0 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btns {
+  display: flex;
+  gap: 10px;
+}
+
+input,
+textarea {
+  border: 2px solid #000;
+  width: 45%;
+}
+
+.select-category {
+  width: 50%;
+  padding: 10px;
+  border: 2px solid #000;
+  border-radius: 4px;
+  font-size: 16px;
+  appearance: none;
+  background: white;
+  cursor: pointer;
+}
+
+.select-category::after {
+  content: '▼';
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+}
