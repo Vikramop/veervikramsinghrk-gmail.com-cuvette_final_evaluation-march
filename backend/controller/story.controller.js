@@ -1,6 +1,91 @@
 import Story from '../modals/story.modal.js';
 import { User } from '../modals/user.modal.js';
 
+const convertDurationToSeconds = (duration) => {
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  const hours = match[1] ? parseInt(match[1]) : 0;
+  const minutes = match[2] ? parseInt(match[2]) : 0;
+  const seconds = match[3] ? parseInt(match[3]) : 0;
+  return hours * 3600 + minutes * 60 + seconds;
+};
+
+export const createStories = async (req, res) => {
+  const { stories } = req.body;
+
+  if (!stories || stories.length < 3 || stories.length > 6) {
+    return res.status(400).json({
+      success: false,
+      message: 'You must provide between 3 and 6 stories.',
+    });
+  }
+
+  const lastCategory = stories[stories.length - 1].category;
+
+  for (const story of stories) {
+    if (story.image && story.image.includes('youtube.com')) {
+      const youtubeMatch = story.image.match(
+        /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|shorts|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+      );
+      if (youtubeMatch) {
+        const videoId = youtubeMatch[1];
+
+        try {
+          const response = await fetch(
+            `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=contentDetails&key=${process.env.YOUTUBE_API_KEY}`
+          );
+          const data = await response.json();
+
+          if (data.items.length > 0) {
+            const duration = data.items[0].contentDetails.duration;
+            console.log('duration', duration);
+
+            const durationInSeconds = convertDurationToSeconds(duration);
+            console.log('durationInSeconds', durationInSeconds);
+
+            if (durationInSeconds > 15) {
+              return res.status(400).json({
+                success: false,
+                message:
+                  'Video duration must be less than or equal to 15 seconds.',
+              });
+            }
+          } else {
+            return res.status(400).json({
+              success: false,
+              message: 'Invalid YouTube video ID.',
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching YouTube video duration:', error);
+          return res
+            .status(500)
+            .json({ success: false, message: 'Server Error' });
+        }
+      }
+    }
+  }
+
+  const newStories = stories.map((story) => ({
+    userId: req.userId,
+    heading: story.heading,
+    description: story.description,
+    image: story.image,
+    category: lastCategory,
+  }));
+
+  try {
+    const savedStories = await Story.insertMany(newStories);
+    res.status(201).json({
+      success: true,
+      message: 'Stories created successfully',
+      data: savedStories,
+    });
+  } catch (error) {
+    console.error('Error in Create Stories:', error.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
 export const getStories = async (req, res) => {
   const userId = req.userId;
 
@@ -24,42 +109,6 @@ export const getStories = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Server Error' });
-  }
-};
-
-export const createStories = async (req, res) => {
-  const { stories } = req.body;
-
-  if (!stories || stories.length < 3 || stories.length > 6) {
-    return res.status(400).json({
-      success: false,
-      message: 'You must provide between 3 and 6 stories.',
-    });
-  }
-
-  // Determine the category from the last story
-  const lastCategory = stories[stories.length - 1].category;
-
-  // Prepare an array to store new stories
-  const newStories = stories.map((story) => ({
-    userId: req.userId,
-    heading: story.heading,
-    description: story.description,
-    image: story.image,
-    category: lastCategory, // Set category to the last story's category
-  }));
-
-  try {
-    // Save all new stories at once
-    const savedStories = await Story.insertMany(newStories);
-    res.status(201).json({
-      success: true,
-      message: 'Stories created successfully',
-      data: savedStories,
-    });
-  } catch (error) {
-    console.error('Error in Create Stories:', error.message);
-    res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 
