@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    bookmarkedStories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Story',
+      },
+    ],
   },
   { timestamps: true }
 );

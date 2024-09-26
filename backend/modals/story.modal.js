@@ -31,8 +31,8 @@ const storySchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  //   likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  //   savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Track users who saved the story
+  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  // savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Track users who saved the story
 });
 
 const Story = mongoose.model('Story', storySchema);
