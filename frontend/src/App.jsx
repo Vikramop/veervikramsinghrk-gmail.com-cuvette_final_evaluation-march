@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import { ToastContainer } from 'react-toastify';
 import { useEffect } from 'react';
 import { userAuthStore } from '../src/store/authStore.js';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const { checkAuth } = userAuthStore();
@@ -13,8 +14,8 @@ function App() {
   }, [checkAuth]);
   return (
     <div>
+      <Toaster />
       <div>
-        <ToastContainer />
         <Routes>
           <Route path="/" element={<Home />} />
         </Routes>

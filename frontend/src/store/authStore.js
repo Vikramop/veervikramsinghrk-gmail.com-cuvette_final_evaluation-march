@@ -112,4 +112,5 @@ export const userAuthStore = create((set) => ({
       throw error;
     }
   },
+  clearError: () => set({ error: null }),
 }));

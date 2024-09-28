@@ -3,8 +3,6 @@ import './Modal.css';
 import close from '../assets/close.jpg';
 import { userAuthStore } from '../store/authStore.js';
 
-import { toast } from 'react-toastify';
-
 const Modal = ({
   onClose,
   heading,
@@ -13,14 +11,20 @@ const Modal = ({
   setUserName,
   password,
   setPassword,
+  clearError,
 }) => {
   const { error, isAuthenticated } = userAuthStore();
+
+  const handleClose = () => {
+    clearError();
+    onClose();
+  };
 
   return (
     <div className="modal-container">
       <div className="auth-modal">
         <button className="close-btn">
-          <img src={close} onClick={onClose} />
+          <img src={close} onClick={handleClose} />
         </button>
         <p className="register">{heading}</p>
         <form onSubmit={onSubmit}>

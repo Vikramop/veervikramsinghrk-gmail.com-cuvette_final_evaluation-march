@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import close from '../assets/close.jpg';
 import './CreateStoryModal.css';
+import { useStoryStore } from '../store/story';
+import { toast } from 'react-hot-toast';
 
 const CreateStoryModal = ({ onClose }) => {
   const initialTabs = ['Slide 1', 'Slide 2', 'Slide 3'];
@@ -15,7 +17,7 @@ const CreateStoryModal = ({ onClose }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [currentTab, setCurrentTab] = useState(0);
 
-  const categories = ['India', 'China', 'Food', 'World', 'Sport'];
+  const categories = ['Gaming', 'People', 'Sports', 'Food', 'India', 'Animals'];
 
   const handleTabAdd = () => {
     if (tabs.length < 6) {
@@ -61,9 +63,37 @@ const CreateStoryModal = ({ onClose }) => {
     });
   };
 
-  const handleSubmit = () => {
-    // Post logic here
-    console.log('Form Data:', formData);
+  const { createStory } = useStoryStore();
+  const handleAddStory = async () => {
+    // console.log('FormData before submission:', formData);
+
+    const incompleteStory = formData.find(
+      (story) =>
+        !story.heading || !story.description || !story.image || !story.category
+    );
+
+    if (incompleteStory) {
+      console.log('Please fill in all fields for each story.');
+      toast.error('Please fill in all fields for each story.');
+      return;
+    }
+
+    const { success, message } = await createStory(formData);
+    console.log('success', success);
+    console.log('message', message);
+
+    if (success) {
+      // Reset formData
+      setFormData([
+        { heading: '', description: '', image: '', category: 'India' },
+        { heading: '', description: '', image: '', category: 'India' },
+        { heading: '', description: '', image: '', category: 'India' },
+      ]);
+
+      toast.success('Story created successfully!');
+    } else {
+      toast.error(message);
+    }
   };
 
   return (
@@ -181,7 +211,7 @@ const CreateStoryModal = ({ onClose }) => {
             </button>
           </div>
 
-          <button className="post-btn" onClick={handleSubmit}>
+          <button className="post-btn" onClick={handleAddStory}>
             Post
           </button>
         </div>

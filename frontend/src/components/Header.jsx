@@ -5,6 +5,7 @@ import { userAuthStore } from '../store/authStore.js';
 import { useNavigate } from 'react-router-dom';
 import pic from '../assets/happy.jpg';
 import CreateStoryModal from './CreateStoryModal .jsx';
+import { toast } from 'react-hot-toast';
 
 const Header = () => {
   const [showModal, setShowModal] = useState(false);
@@ -19,35 +20,39 @@ const Header = () => {
   };
   const navigate = useNavigate();
 
-  const { signup, login, isAuthenticated, user, logout } = userAuthStore();
+  const { signup, login, isAuthenticated, user, logout, error, clearError } =
+    userAuthStore();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
     try {
-      signup(userName, password);
-      //   onSuccess();
-      navigate('/'); // Navigate to the home page or wherever you want
-      //   toast.success('Sign-up successful!');
+      await signup(userName, password);
+      navigate('/');
+      toast.success('Sign-up successful!');
       setPassword('');
       setUserName('');
-    } catch (error) {
-      console.error(error);
-      //   toast.error('Sign-up failed. Please try again.');
+    } catch (err) {
+      console.error(err);
+      toast.error(error || 'Sign-up failed. Please try again.');
     }
   };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       await login(userName, password);
+      toast.success('Login successful!');
       setPassword('');
       setUserName('');
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch (err) {
+      console.error('Login failed:', err);
+      toast.error(error || 'Login failed. Please try again.');
     }
   };
 
   const handleLogout = () => {
     logout();
+    toast.success('logout successful!');
     navigate('/');
   };
 
@@ -74,17 +79,16 @@ const Header = () => {
             <button
               className="add-story-btn"
               onClick={() => {
-                setShowStoryModal(true); // Show the new modal when button is clicked
+                setShowStoryModal(true);
               }}
             >
               Add Story
             </button>
 
-            {/* Conditionally render the modal */}
             {showStoryModal && (
               <CreateStoryModal
                 onClose={() => {
-                  setShowStoryModal(false); // Close the modal when onClose is called
+                  setShowStoryModal(false);
                 }}
               />
             )}
@@ -168,6 +172,7 @@ const Header = () => {
               setUserName={setUserName}
               password={password}
               setPassword={setPassword}
+              clearError={clearError}
             />
           )}
         </div>
