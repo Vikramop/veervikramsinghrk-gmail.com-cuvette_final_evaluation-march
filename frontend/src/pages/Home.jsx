@@ -1,176 +1,246 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import './Home.css';
+import { useStoryStore } from '../store/story';
+import { jwtDecode } from 'jwt-decode';
+import EditStoryModal from '../components/EditStoryModal .jsx';
+import Filters from '../components/Filters.jsx';
 
 const Home = () => {
-  // const feeds = [
-  //   {
-  //     heading: 'Delicious Pasta Recipes',
-  //     description: 'Learn to cook amazing pasta dishes from around the world.',
-  //     image:
-  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-  //   },
-  //   {
-  //     heading: 'Healthy Salads to Keep You Fit',
-  //     description: 'Explore these refreshing and nutritious salad ideas.',
-  //     image:
-  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-  //   },
-  //   {
-  //     heading: 'The Art of Pizza Making',
-  //     description: 'Master the secrets of making the perfect pizza at home.',
-  //     image:
-  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-  //   },
-  //   {
-  //     heading: 'Top 10 Desserts for Sweet Lovers',
-  //     description: 'Indulge in these irresistible dessert recipes.',
-  //     image:
-  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-  //   },
-  //   {
-  //     heading: 'Gourmet Burgers You Can Make at Home',
-  //     description: 'Upgrade your burger game with these gourmet ideas.',
-  //     image:
-  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-  //   },
-  //   {
-  //     heading: 'Vegan Dishes Everyone Will Love',
-  //     description: 'Delicious vegan meals that even non-vegans will enjoy.',
-  //     image:
-  //       'https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600',
-  //   },
-  // ];
+  const { fetchStory, stories, fetchFilteredStories } = useStoryStore();
+  const [userShowAll, setUserShowAll] = useState(false);
+  const [categoryShowAll, setCategoryShowAll] = useState({});
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedStory, setSelectedStory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categoryStories, setCategoryStories] = useState({
+    userStories: [],
+    Foods: [],
+    Sports: [],
+    Gaming: [],
+    India: [],
+    Animals: [],
+    People: [],
+  });
 
-  const feeds = [];
-  const filterRef = useRef(null);
-
-  // const feedall = true;
-  // const feeds = 0;
-  const [showAll, setShowAll] = useState(false);
-
-  // Function to toggle the state
-  const handleShowMore = () => {
-    setShowAll(!showAll);
+  const predefinedCategories = [
+    'India',
+    'Foods',
+    'Sports',
+    'Gaming',
+    'People',
+    'Animals',
+  ];
+  const handleCategorySelect = (category2) => {
+    setSelectedCategory(category2);
+  };
+  const openEditModal = (story) => {
+    setSelectedStory(story);
+    setIsEditModalOpen(true);
   };
 
-  const displayedFeeds = showAll ? 'No feeds' : feeds.slice(0, 4);
-
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setStartX(e.pageX - filterRef.current.offsetLeft);
-    setScrollLeft(filterRef.current.scrollLeft);
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedStory(null);
   };
 
-  const handleMouseLeave = () => {
-    setIsDragging(false);
+  useEffect(() => {
+    fetchStory();
+  }, [fetchStory]);
+
+  useEffect(() => {
+    if (stories.length) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        const userId = decodedToken._id;
+
+        const userStories = stories.filter((story) => story.userId === userId);
+        const categorizedStories = {};
+
+        stories.forEach((story) => {
+          const category = story.category || 'Uncategorized';
+          if (!categorizedStories[category]) {
+            categorizedStories[category] = [];
+          }
+          categorizedStories[category].push(story);
+        });
+
+        setCategoryStories({ userStories, ...categorizedStories });
+      }
+    }
+  }, [stories]);
+
+  const handleUserShowMore = () => {
+    setUserShowAll(!userShowAll);
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
+  const handleCategoryShowMore = (category) => {
+    setCategoryShowAll((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
   };
 
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - filterRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // Adjust scroll speed by changing the multiplier
-    filterRef.current.scrollLeft = scrollLeft - walk;
+  const isVideo = (url) => {
+    const videoExtensions = /\.(mp4|webm|ogg)$/i;
+    const youtubePattern =
+      /^(https?:\/\/)?(www\.)?(youtube\.com\/(shorts\/|watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})$/;
+
+    return videoExtensions.test(url) || youtubePattern.test(url);
   };
+
+  const getYouTubeId = (url) => {
+    const match = url.match(
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:shorts\/|watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    );
+    return match ? match[1] : null; // Return the video ID if found
+  };
+  const token = localStorage.getItem('token');
 
   return (
     <div>
       <Header />
+
       <div className="h-container">
-        <div
-          className="filter"
-          ref={filterRef}
-          onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-        >
-          <div className="box1">All</div>
-          <div className="box2">Sports</div>
-          <div className="box3">Gaming</div>
-          <div className="box4">Foods</div>
-          <div className="box5">India</div>
-          <div className="box6">World</div>
-        </div>
+        <Filters fetchFilteredStories={fetchFilteredStories} />
 
         <div className="filter-sec">
-          <div>{/* Display stories here */}</div>
-          <h4 className="h4">Top Stories About food</h4>
-
-          <div className={feeds.length > 0 ? 'feed' : 'nofeed'}>
-            {feeds.length > 0 ? (
-              <div>
-                {displayedFeeds.map((feed, index) => (
-                  <div
-                    key={index}
-                    style={{ backgroundImage: `url(${feed.image})` }}
-                  >
-                    <p className="feed-h">{feed.heading}</p>
-                    <p className="feed-para">{feed.description}</p>
+          {/* User's Stories */}
+          <h4 className="category-heading">Your Stories</h4>
+          <div
+            className={
+              categoryStories.userStories.length > 0 ? 'story-feed' : 'nofeed'
+            }
+          >
+            {categoryStories.userStories.length > 0 ? (
+              categoryStories.userStories
+                .slice(0, userShowAll ? categoryStories.userStories.length : 4)
+                .map((story) => (
+                  <div key={story._id} className="story-card">
+                    {isVideo(story.image) ? (
+                      story.image.includes('youtube.com') ||
+                      story.image.includes('youtu.be') ? (
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${getYouTubeId(
+                            story.image
+                          )}`}
+                          frameBorder="0"
+                          allow="autoplay; encrypted-media"
+                          allowFullScreen
+                          className="background-video"
+                        />
+                      ) : (
+                        <video
+                          autoPlay
+                          loop
+                          muted
+                          className="background-video"
+                          src={story.image}
+                          type="video/mp4"
+                        />
+                      )
+                    ) : (
+                      <div
+                        className="background-image"
+                        style={{ backgroundImage: `url(${story.image})` }}
+                      >
+                        <p className="story-heading">{story.heading}</p>
+                        <p className="story-description">{story.description}</p>
+                      </div>
+                    )}
+                    <button
+                      className="edit-btn"
+                      onClick={() => openEditModal(story)}
+                    >
+                      Edit Story
+                    </button>
                   </div>
-                ))}
-                {feeds.length > 4 && !showAll && (
-                  <button onClick={handleShowMore} className="more-btn">
-                    Show More
-                  </button>
-                )}
-                {showAll && feeds.length > 4 && (
-                  <button onClick={handleShowMore} className="less-btn">
-                    Show Less
-                  </button>
-                )}
-              </div>
+                ))
             ) : (
-              'No stories available'
+              <p>No stories available</p>
             )}
           </div>
-          {/* <div className={feedall ? '' : 'nofeed'}>
-            {feedall ? (
-              <div className="feed">
-                <div>
-                  <p className="feed-h">Heading comes here</p>
-                  <p className="feed-para">
-                    Inspirational designs, illustrations, and graphic elements
-                    from the world’s best designers.
-                  </p>
+          {categoryStories.userStories.length > 4 && (
+            <button onClick={handleUserShowMore} className="more-btn">
+              {userShowAll ? 'Show Less' : 'Show More'}
+            </button>
+          )}
+
+          {/* Stories by Categories */}
+          {predefinedCategories.map((category) => {
+            const stories = categoryStories[category] || [];
+            return (
+              <div key={category} className="category-container">
+                <h4 className="category-heading">
+                  Top Stories About {category}
+                </h4>
+                <div className={stories.length > 0 ? 'story-feed' : 'no-feed'}>
+                  {stories.length > 0 ? (
+                    stories
+                      .slice(0, categoryShowAll[category] ? stories.length : 4)
+                      .map((story) => (
+                        <div key={story._id} className="story-card">
+                          {isVideo(story.image) ? (
+                            story.image.includes('youtube.com') ||
+                            story.image.includes('youtu.be') ? (
+                              <iframe
+                                width="100%"
+                                height="100%"
+                                src={`https://www.youtube.com/embed/${getYouTubeId(
+                                  story.image
+                                )}`}
+                                frameBorder="0"
+                                allow="autoplay; encrypted-media"
+                                allowFullScreen
+                                className="background-video"
+                              />
+                            ) : (
+                              <video
+                                autoPlay
+                                loop
+                                muted
+                                className="background-video"
+                                src={story.image}
+                                type="video/mp4"
+                              />
+                            )
+                          ) : (
+                            <div
+                              className="background-image"
+                              style={{ backgroundImage: `url(${story.image})` }}
+                            >
+                              <p className="story-heading">{story.heading}</p>
+                              <p className="story-description">
+                                {story.description}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                  ) : (
+                    <p>No stories available</p>
+                  )}
                 </div>
-                <div>
-                  <p className="feed-h">Heading comes here</p>
-                  <p className="feed-para">
-                    Inspirational designs, illustrations, and graphic elements
-                    from the world’s best designers.
-                  </p>
-                </div>
-                <div>
-                  <p className="feed-h">Heading comes here</p>
-                  <p className="feed-para">
-                    Inspirational designs, illustrations, and graphic elements
-                    from the world’s best designers.
-                  </p>
-                </div>
-                <div>
-                  <p className="feed-h">Heading comes here</p>
-                  <p className="feed-para">
-                    Inspirational designs, illustrations, and graphic elements
-                    from the world’s best designers.
-                  </p>
-                </div>
+                {stories.length > 4 && (
+                  <button
+                    onClick={() => handleCategoryShowMore(category)}
+                    className="more-btn"
+                  >
+                    {categoryShowAll[category] ? 'Show Less' : 'Show More'}
+                  </button>
+                )}
               </div>
-            ) : (
-              'No stories Available'
-            )}
-          </div> */}
+            );
+          })}
         </div>
+
+        {/* Edit Story Modal */}
+        {isEditModalOpen && (
+          <EditStoryModal onClose={closeEditModal} storyData={selectedStory} />
+        )}
       </div>
     </div>
   );
