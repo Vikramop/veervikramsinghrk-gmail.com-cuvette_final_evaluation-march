@@ -7,7 +7,7 @@ import pic from '../assets/happy.jpg';
 import CreateStoryModal from './CreateStoryModal .jsx';
 import { toast } from 'react-hot-toast';
 
-const Header = () => {
+const Header = ({ fetchStory, clearStories }) => {
   const [showModal, setShowModal] = useState(false);
   const [showStoryModal, setShowStoryModal] = useState(false);
   const [modalHeading, setModalHeading] = useState('');
@@ -15,6 +15,16 @@ const Header = () => {
   const [password, setPassword] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const token = localStorage.getItem('token');
+  const isLoggedIn = !!token;
+
+  const handleBookmarkClick = () => {
+    if (isLoggedIn) {
+      navigate('/bookmarks'); // Navigate to BookmarkPage if logged in
+    } else {
+      toast.error('Please log in to view your bookmarks.'); // Show toast if not logged in
+    }
+  };
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
@@ -52,9 +62,18 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
+    localStorage.removeItem('token');
+    clearStories();
+    fetchStory();
     toast.success('logout successful!');
     navigate('/');
   };
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchStory();
+    }
+  }, [isAuthenticated, user, fetchStory]);
 
   return (
     <div className="header-container">
@@ -62,11 +81,12 @@ const Header = () => {
         <>
           <div className="header-items">
             <div className="book">
-              <button className="bookmark-btn">Bookmarks</button>
+              <button className="bookmark-btn" onClick={handleBookmarkClick}>
+                Bookmarks
+              </button>
 
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                enableBackground="new 0 0 500 500"
                 fill="#FFF"
                 viewBox="0 0 30 30"
                 width="25px"

@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
+import { useStoryStore } from '../store/story';
 
-const Filters = ({ fetchFilteredStories, onCategorySelect }) => {
+const Filters = ({ onCategorySelect }) => {
+  const { fetchFilteredStories } = useStoryStore();
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -30,10 +32,10 @@ const Filters = ({ fetchFilteredStories, onCategorySelect }) => {
     filterRef.current.scrollLeft = scrollLeft - walk;
   };
 
-  const handleCategoryClick = (category2) => {
-    setFilterCategory(category2); // Update the selected category
-    fetchFilteredStories(category2);
-    onCategorySelect(category2); // Call the function to fetch stories
+  const handleCategoryClick = (filterCategory) => {
+    setFilterCategory(filterCategory); // Update the selected category
+    fetchFilteredStories(filterCategory);
+    onCategorySelect(filterCategory); // Call the function to fetch stories
   };
 
   return (

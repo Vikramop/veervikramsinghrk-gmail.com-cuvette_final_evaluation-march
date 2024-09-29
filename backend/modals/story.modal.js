@@ -21,7 +21,7 @@ const storySchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['gaming', 'news', 'sports', 'food', 'india', 'world'],
+    enum: ['Gaming', 'People', 'Sports', 'Food', 'India', 'Animals'],
   },
   createdAt: {
     type: Date,
@@ -32,8 +32,13 @@ const storySchema = new mongoose.Schema({
     default: 0,
   },
   likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  // savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Track users who saved the story
+  savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Track users who saved the story
 });
+
+// Optionally, add indexes for faster queries
+storySchema.index({ userId: 1 });
+storySchema.index({ category: 1 });
+storySchema.index({ createdAt: -1 });
 
 const Story = mongoose.model('Story', storySchema);
 

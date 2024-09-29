@@ -4,10 +4,15 @@ import './Home.css';
 import { useStoryStore } from '../store/story';
 import { jwtDecode } from 'jwt-decode';
 import EditStoryModal from '../components/EditStoryModal .jsx';
-import Filters from '../components/Filters.jsx';
+import Filters from '../components/Filters';
 
 const Home = () => {
-  const { fetchStory, stories, fetchFilteredStories } = useStoryStore();
+  const token = localStorage.getItem('token');
+  const { fetchStory, stories, toggleBookmark, bookmarks, toggleLike } =
+    useStoryStore();
+  const [likedStories, setLikedStories] = useState([]);
+  const [likeCounts, setLikeCounts] = useState({});
+  const [decodedToken, setDecodedToken] = useState(null);
   const [userShowAll, setUserShowAll] = useState(false);
   const [categoryShowAll, setCategoryShowAll] = useState({});
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -23,6 +28,15 @@ const Home = () => {
     People: [],
   });
 
+  // const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('token');
+  useEffect(() => {
+    if (token) {
+      const decoded = jwtDecode(token);
+      setDecodedToken(decoded);
+    }
+  }, [token]);
+
   const predefinedCategories = [
     'India',
     'Foods',
@@ -31,9 +45,11 @@ const Home = () => {
     'People',
     'Animals',
   ];
-  const handleCategorySelect = (category2) => {
-    setSelectedCategory(category2);
+
+  const handleCategorySelect = (filterCategory) => {
+    setSelectedCategory(filterCategory);
   };
+
   const openEditModal = (story) => {
     setSelectedStory(story);
     setIsEditModalOpen(true);
@@ -44,6 +60,27 @@ const Home = () => {
     setSelectedStory(null);
   };
 
+  const handleBookmarkClick = (storyId) => {
+    console.log('Stories:', stories);
+    console.log('Attempting to bookmark story with ID:', storyId);
+
+    // Call the toggleBookmark function with the story ID
+    toggleBookmark(storyId).then(() => {
+      // Log bookmarks after attempting to toggle
+      console.log('Updated Bookmarks:', bookmarks);
+
+      // Check if the user is logged in
+      if (isLoggedIn) {
+        // Check if the story is already bookmarked
+        const isBookmarked = bookmarks.includes(storyId);
+
+        console.log(isBookmarked ? 'Bookmark removed' : 'Story bookmarked');
+      } else {
+        console.log('Please log in to bookmark this story.');
+      }
+    });
+  };
+
   useEffect(() => {
     fetchStory();
   }, [fetchStory]);
@@ -51,22 +88,29 @@ const Home = () => {
   useEffect(() => {
     if (stories.length) {
       const token = localStorage.getItem('token');
+      const categorizedStories = {};
+
+      // Categorize all stories
+      stories.forEach((story) => {
+        const category = story.category || 'Uncategorized';
+        if (!categorizedStories[category]) {
+          categorizedStories[category] = [];
+        }
+        categorizedStories[category].push(story);
+      });
+
+      // If token exists, filter user stories
       if (token) {
         const decodedToken = jwtDecode(token);
         const userId = decodedToken._id;
 
         const userStories = stories.filter((story) => story.userId === userId);
-        const categorizedStories = {};
 
-        stories.forEach((story) => {
-          const category = story.category || 'Uncategorized';
-          if (!categorizedStories[category]) {
-            categorizedStories[category] = [];
-          }
-          categorizedStories[category].push(story);
-        });
-
+        // Set both user stories and categorized stories
         setCategoryStories({ userStories, ...categorizedStories });
+      } else {
+        // If no token, just set categorized stories with empty userStories
+        setCategoryStories({ userStories: [], ...categorizedStories });
       }
     }
   }, [stories]);
@@ -96,92 +140,60 @@ const Home = () => {
     );
     return match ? match[1] : null; // Return the video ID if found
   };
-  const token = localStorage.getItem('token');
+  const handleLikeClick = async (storyId) => {
+    const isLiked = likedStories.includes(storyId);
+
+    // Toggle like state in the UI
+    if (isLiked) {
+      // Remove from liked stories
+      setLikedStories((prevLikes) => prevLikes.filter((id) => id !== storyId));
+      setLikeCounts((prevCounts) => ({
+        ...prevCounts,
+        [storyId]: (prevCounts[storyId] || 0) - 1, // Decrease like count
+      }));
+    } else {
+      // Add to liked stories
+      setLikedStories((prevLikes) => [...prevLikes, storyId]);
+      setLikeCounts((prevCounts) => ({
+        ...prevCounts,
+        [storyId]: (prevCounts[storyId] || 0) + 1, // Increase like count
+      }));
+    }
+
+    // Now call the backend API to persist the like
+    await toggleLike(storyId, isLiked);
+  };
 
   return (
     <div>
-      <Header />
-
       <div className="h-container">
-        <Filters fetchFilteredStories={fetchFilteredStories} />
+        <Filters onCategorySelect={handleCategorySelect} />
 
         <div className="filter-sec">
-          {/* User's Stories */}
-          <h4 className="category-heading">Your Stories</h4>
-          <div
-            className={
-              categoryStories.userStories.length > 0 ? 'story-feed' : 'nofeed'
-            }
-          >
-            {categoryStories.userStories.length > 0 ? (
-              categoryStories.userStories
-                .slice(0, userShowAll ? categoryStories.userStories.length : 4)
-                .map((story) => (
-                  <div key={story._id} className="story-card">
-                    {isVideo(story.image) ? (
-                      story.image.includes('youtube.com') ||
-                      story.image.includes('youtu.be') ? (
-                        <iframe
-                          width="100%"
-                          height="100%"
-                          src={`https://www.youtube.com/embed/${getYouTubeId(
-                            story.image
-                          )}`}
-                          frameBorder="0"
-                          allow="autoplay; encrypted-media"
-                          allowFullScreen
-                          className="background-video"
-                        />
-                      ) : (
-                        <video
-                          autoPlay
-                          loop
-                          muted
-                          className="background-video"
-                          src={story.image}
-                          type="video/mp4"
-                        />
-                      )
-                    ) : (
-                      <div
-                        className="background-image"
-                        style={{ backgroundImage: `url(${story.image})` }}
-                      >
-                        <p className="story-heading">{story.heading}</p>
-                        <p className="story-description">{story.description}</p>
-                      </div>
-                    )}
-                    <button
-                      className="edit-btn"
-                      onClick={() => openEditModal(story)}
-                    >
-                      Edit Story
-                    </button>
-                  </div>
-                ))
-            ) : (
-              <p>No stories available</p>
-            )}
-          </div>
-          {categoryStories.userStories.length > 4 && (
-            <button onClick={handleUserShowMore} className="more-btn">
-              {userShowAll ? 'Show Less' : 'Show More'}
-            </button>
-          )}
+          {/* Conditionally show 'Your Stories' if token is present */}
+          {token ? (
+            <>
+              <h4 className="category-heading">Your Stories</h4>
+              <div
+                className={
+                  categoryStories.userStories.length > 0
+                    ? 'story-feed'
+                    : 'nofeed'
+                }
+              >
+                {categoryStories.userStories.length > 0 ? (
+                  categoryStories.userStories
+                    .slice(
+                      0,
+                      userShowAll ? categoryStories.userStories.length : 4
+                    )
+                    .map((story) => {
+                      const isBookmarked = bookmarks.includes(story._id);
+                      // console.log('isBookmarked:', isBookmarked);
+                      // console.log('story._id:', story._id);
 
-          {/* Stories by Categories */}
-          {predefinedCategories.map((category) => {
-            const stories = categoryStories[category] || [];
-            return (
-              <div key={category} className="category-container">
-                <h4 className="category-heading">
-                  Top Stories About {category}
-                </h4>
-                <div className={stories.length > 0 ? 'story-feed' : 'no-feed'}>
-                  {stories.length > 0 ? (
-                    stories
-                      .slice(0, categoryShowAll[category] ? stories.length : 4)
-                      .map((story) => (
+                      // Check bookmark status for each story
+                      return (
                         <div key={story._id} className="story-card">
                           {isVideo(story.image) ? (
                             story.image.includes('youtube.com') ||
@@ -218,8 +230,188 @@ const Home = () => {
                               </p>
                             </div>
                           )}
+                          <button
+                            className="edit-btn"
+                            onClick={() => openEditModal(story)}
+                          >
+                            Edit Story
+                          </button>
+                          <button
+                            onClick={() => handleBookmarkClick(story._id)} // Call toggleBookmark with story ID
+                            className={`bookmarks ${
+                              isBookmarked ? 'bookmarked' : ''
+                            }`}
+                          >
+                            <svg
+                              // stroke="#FFFFF"
+                              strokeWidth="2"
+                              fill="#FFF"
+                              height="30px"
+                              width="30px"
+                              version="1.1"
+                              id="Layer_1"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 500 500"
+                              className="svg"
+                            >
+                              <g>
+                                <g>
+                                  <path d="M70.715,0v512L256,326.715L441.285,512V0H70.715z M411.239,439.462L256,284.224L100.761,439.462V30.046h310.477V439.462z" />
+                                </g>
+                              </g>
+                            </svg>
+                          </button>
                         </div>
-                      ))
+                      );
+                    })
+                ) : (
+                  <p>No stories available</p>
+                )}
+              </div>
+              {categoryStories.userStories.length > 4 && (
+                <button onClick={handleUserShowMore} className="more-btn">
+                  {userShowAll ? 'Show Less' : 'Show More'}
+                </button>
+              )}
+            </>
+          ) : null}
+
+          {/* Stories by Categories */}
+          {predefinedCategories.map((category) => {
+            const stories = categoryStories[category] || [];
+            return (
+              <div key={category} className="category-container">
+                <h4 className="category-heading">
+                  Top Stories About {category}
+                </h4>
+                <div className={stories.length > 0 ? 'story-feed' : 'no-feed'}>
+                  {stories.length > 0 ? (
+                    stories
+                      .slice(0, categoryShowAll[category] ? stories.length : 4)
+                      .map((story) => {
+                        const isLiked = likedStories.includes(story._id);
+                        const likeCount = likeCounts[story._id] || 0;
+
+                        return (
+                          <div key={story._id} className="story-card">
+                            {isVideo(story.image) ? (
+                              story.image.includes('youtube.com') ||
+                              story.image.includes('youtu.be') ? (
+                                <iframe
+                                  width="100%"
+                                  height="100%"
+                                  src={`https://www.youtube.com/embed/${getYouTubeId(
+                                    story.image
+                                  )}`}
+                                  frameBorder="0"
+                                  allow="autoplay; encrypted-media"
+                                  allowFullScreen
+                                  className="background-video"
+                                />
+                              ) : (
+                                <video
+                                  autoPlay
+                                  loop
+                                  muted
+                                  className="background-video"
+                                  src={story.image}
+                                  type="video/mp4"
+                                />
+                              )
+                            ) : (
+                              <div
+                                className="background-image"
+                                style={{
+                                  backgroundImage: `url(${story.image})`,
+                                }}
+                              >
+                                <p className="story-heading">{story.heading}</p>
+                                <p className="story-description">
+                                  {story.description}
+                                </p>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => handleBookmarkClick(story._id)} // Call toggleBookmark with story ID
+                              className={`bookmarks ${
+                                story.savedBy.includes(decodedToken._id)
+                                  ? 'bookmarked'
+                                  : ''
+                              }`}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                strokeWidth="2"
+                                stroke={
+                                  story.savedBy.includes(decodedToken._id) &&
+                                  isLoggedIn
+                                    ? '#0000FF'
+                                    : '#000'
+                                } // Change to blue if bookmarked
+                                fill={
+                                  story.savedBy.includes(decodedToken._id) &&
+                                  isLoggedIn
+                                    ? '#0000FF'
+                                    : '#FFF'
+                                } // Change to blue if bookmarked
+                                viewBox="0 0 30 30"
+                                width="30px"
+                                height="30px"
+                                className="svg"
+                              >
+                                <path d="M23,27l-8-7l-8,7V5c0-1.105,0.895-2,2-2h12c1.105,0,2,0.895,2,2V27z" />
+                              </svg>
+                            </button>
+
+                            <button
+                              onClick={() => handleLikeClick(story._id)} // Call toggleLike with story ID
+                              className={`like-btn ${isLiked ? 'liked' : ''}`} // Conditionally apply the 'liked' class
+                            >
+                              <svg
+                                height="30px"
+                                width="30px"
+                                version="1.1"
+                                id="Layer_1"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 512 512"
+                              >
+                                <path
+                                  style={{
+                                    fill:
+                                      isLiked && isLoggedIn
+                                        ? '#FF5023'
+                                        : '#FFFFFF',
+                                  }}
+                                  d="M373.029,43.886c-49.137,0-92.317,25.503-117.029,63.993
+	c-24.712-38.489-67.891-63.993-117.029-63.993C62.22,43.886,0,106.105,0,182.857c0,90.699,67.291,141.41,134.583,194.073
+	C194.493,423.816,256,468.114,256,468.114s61.509-44.298,121.417-91.184C444.709,324.267,512,273.556,512,182.857
+	C512,106.105,449.78,43.886,373.029,43.886z"
+                                />
+                                <path
+                                  style={{
+                                    fill:
+                                      isLiked && isLoggedIn
+                                        ? '#D80027'
+                                        : '#FFFFFF',
+                                  }}
+                                  d="M256,107.878c-24.712-38.489-67.891-63.993-117.029-63.993C62.22,43.886,0,106.105,0,182.857
+	c0,90.699,67.291,141.41,134.583,194.073C194.493,423.816,256,468.114,256,468.114S256,225.28,256,107.878z"
+                                />
+                              </svg>
+                              <span
+                                className="count"
+                                style={{
+                                  marginLeft: '8px',
+                                  color: 'white',
+                                }}
+                              >
+                                {likeCount}
+                              </span>{' '}
+                              {/* Display like count */}
+                            </button>
+                          </div>
+                        );
+                      })
                   ) : (
                     <p>No stories available</p>
                   )}
@@ -236,12 +428,11 @@ const Home = () => {
             );
           })}
         </div>
-
-        {/* Edit Story Modal */}
-        {isEditModalOpen && (
-          <EditStoryModal onClose={closeEditModal} storyData={selectedStory} />
-        )}
       </div>
+
+      {isEditModalOpen && (
+        <EditStoryModal story={selectedStory} onClose={closeEditModal} />
+      )}
     </div>
   );
 };

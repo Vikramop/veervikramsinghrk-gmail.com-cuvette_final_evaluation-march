@@ -1,8 +1,13 @@
 import { create } from 'zustand';
 import { jwtDecode } from 'jwt-decode';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
-export const useStoryStore = create((set) => ({
+export const useStoryStore = create((set, get) => ({
   stories: [],
+  bookmarks: [],
+  userStories: [],
+  bookmarkedStories: [],
   setStories: (stories) => set({ stories }),
 
   createStory: async (formData) => {
@@ -50,22 +55,14 @@ export const useStoryStore = create((set) => ({
     const token = localStorage.getItem('token');
     console.log('token before fetch', token);
 
-    if (!token) {
-      console.error('No token found');
-      return;
-    }
-
     try {
-      const res = await fetch('api/story', {
+      const res = await fetch('/api/story', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: token ? `Bearer ${token}` : '', // Set Authorization only if token exists
         },
       });
-
-      // console.log('Response Status:', res.status);
-      // console.log('Response Headers:', res.headers);
 
       // Check if the response is okay
       if (!res.ok) {
@@ -76,7 +73,15 @@ export const useStoryStore = create((set) => ({
       const data = await res.json();
       console.log('API Response:', data);
 
-      // Check if the expected data structure is present
+      // If there is no token, fetch all stories
+      if (!token) {
+        // Assume data.data holds all stories when no token is present
+        set({ stories: data.data, userStories: [] });
+        console.log('Fetched all stories:', data.data);
+        return;
+      }
+
+      // If token is present, filter user stories
       if (data.data) {
         const decodedToken = jwtDecode(token);
         const userId = decodedToken._id; // Adjust according to your token's structure
@@ -231,6 +236,197 @@ export const useStoryStore = create((set) => ({
     } catch (error) {
       console.error('Error fetching stories:', error);
       return { success: false, message: error.message || 'An error occurred' };
+    }
+  },
+
+  clearStories: () => {
+    set({ stories: [] });
+  },
+
+  toggleBookmark: async (storyId) => {
+    const token = localStorage.getItem('token');
+
+    // Check if the user is logged in
+    if (!token) {
+      toast.error('Please log in to bookmark stories.');
+      return;
+    }
+
+    try {
+      const decodedToken = jwtDecode(token);
+      const stories = get().stories;
+      console.log('Current Stories:', stories); // Log current stories
+
+      const story = stories.find((s) => s._id === storyId); // Find the story by ID
+      console.log('Selected Story:', story);
+      console.log('Story ID to toggle:', storyId);
+
+      // Check if the story was found
+      if (!story) {
+        toast.error('Story not found.');
+        return;
+      }
+
+      const isBookmarked = story.savedBy.includes(decodedToken._id); // Check if already bookmarked
+
+      // Determine the URL and method based on whether it's a bookmark or unbookmark
+      const url = isBookmarked
+        ? `/api/story/bookmark/${storyId}`
+        : '/api/story/bookmark';
+      const method = isBookmarked ? 'DELETE' : 'POST';
+      const body = isBookmarked ? null : JSON.stringify({ storyId }); // Send storyId only when bookmarking
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body,
+      });
+
+      const data = await res.json();
+
+      // Check for server error
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to toggle bookmark');
+      }
+
+      // Update the state based on the result
+      set((prev) => {
+        const updatedStories = prev.stories.map((s) =>
+          s._id === storyId
+            ? {
+                ...s,
+                savedBy: isBookmarked
+                  ? s.savedBy.filter((id) => id !== decodedToken._id) // Remove bookmark
+                  : [...s.savedBy, decodedToken._id], // Add bookmark
+              }
+            : s
+        );
+
+        const updatedBookmarks = isBookmarked
+          ? prev.bookmarks.filter((id) => id !== decodedToken._id) // Update bookmarks
+          : [...prev.bookmarks, decodedToken._id];
+
+        return {
+          stories: updatedStories,
+          bookmarks: updatedBookmarks, // Update bookmarks state directly
+        };
+      });
+
+      toast.success(
+        isBookmarked
+          ? 'Bookmark removed successfully'
+          : 'Story bookmarked successfully'
+      );
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      toast.error(error.message || 'An error occurred while toggling bookmark');
+    }
+  },
+
+  clearBookmarks: () => set({ bookmarks: [] }),
+
+  getBookmarkedStories: async () => {
+    const token = localStorage.getItem('token');
+
+    // Check if the user is logged in
+    if (!token) {
+      toast.error('Please log in to view your bookmarked stories.');
+      return;
+    }
+
+    try {
+      // const decodedToken = jwtDecode(token);
+      // const userId = decodedToken._id; // Extract user ID from token
+      // console.log('User ID22:', userId);
+
+      const res = await fetch(`/api/story/bookmark/`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      // Check for server error
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to fetch bookmarked stories');
+      }
+
+      // Update the state with the fetched bookmarked stories
+      set((prev) => ({
+        ...prev,
+        bookmarkedStories: data.data || [], // Assuming data contains an array of bookmarked stories
+      }));
+
+      toast.success('Bookmarked stories fetched successfully');
+    } catch (error) {
+      console.error('Error fetching bookmarked stories:', error);
+      toast.error(
+        error.message || 'An error occurred while fetching bookmarked stories'
+      );
+    }
+  },
+
+  toggleLike: async (storyId) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      toast.error('Please log in to like stories.');
+      return;
+    }
+
+    try {
+      const decodedToken = jwtDecode(token);
+      const stories = get().stories;
+
+      const story = stories.find((s) => s._id === storyId);
+      if (!story) {
+        toast.error('Story not found.');
+        return;
+      }
+
+      // Check if likedBy is defined and determine if the story is liked
+      const isLiked = story.likedBy && story.likedBy.includes(decodedToken._id);
+
+      const url = `/api/story/like/${storyId}`; // Use storyId in URL for DELETE
+      const method = isLiked ? 'DELETE' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: method === 'POST' ? JSON.stringify({ storyId }) : null,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to toggle like');
+      }
+
+      set((prev) => ({
+        stories: prev.stories.map((s) =>
+          s._id === storyId
+            ? {
+                ...s,
+                likedBy: isLiked
+                  ? s.likedBy.filter((id) => id !== decodedToken._id)
+                  : [...s.likedBy, decodedToken._id],
+                likes: isLiked ? s.likes - 1 : s.likes + 1,
+              }
+            : s
+        ),
+      }));
+
+      toast.success(isLiked ? 'Like removed' : 'Story liked');
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast.error(error.message || 'An error occurred while liking the story');
     }
   },
 }));

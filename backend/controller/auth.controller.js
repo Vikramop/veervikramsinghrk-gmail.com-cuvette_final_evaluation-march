@@ -12,9 +12,10 @@ export const signup = async (req, res) => {
     const userAlreadyExists = await User.findOne({ userName });
     console.log('user already exists', userAlreadyExists);
     if (userAlreadyExists) {
-      return res
-        .status(400)
-        .json({ sucess: false, message: 'user already exists' });
+      return res.status(400).json({
+        success: false,
+        message: 'user already exists',
+      });
     }
     const hashedPassword = await bcryptjs.hash(password, 10);
 
@@ -36,7 +37,7 @@ export const signup = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(400).json({ sucess: false, message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 

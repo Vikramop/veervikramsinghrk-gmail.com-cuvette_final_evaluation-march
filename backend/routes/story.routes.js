@@ -28,10 +28,10 @@ router.get('/filter', optionalVerifyToken, filterStoriesByCategory);
 
 router.post('/bookmark', verifyToken, bookmarkStory);
 router.get('/bookmark', verifyToken, getBookmarkedStories);
-router.delete('/bookmark', verifyToken, removeBookmark);
+router.delete('/bookmark/:storyId', verifyToken, removeBookmark);
 
-router.post('/like', verifyToken, likeStory);
-router.delete('/like', verifyToken, unlikeStory);
+router.post('/like/:storyId', verifyToken, likeStory);
+router.delete('/like/:storyId', verifyToken, unlikeStory);
 
 router.post('/share', shareStory);
 

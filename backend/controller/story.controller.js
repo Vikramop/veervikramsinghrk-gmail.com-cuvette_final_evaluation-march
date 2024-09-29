@@ -10,7 +10,7 @@ const convertDurationToSeconds = (duration) => {
 };
 
 export const createStories = async (req, res) => {
-  const { stories } = req.body;
+  const stories = req.body;
 
   if (!stories || stories.length < 3 || stories.length > 6) {
     return res.status(400).json({
@@ -88,6 +88,7 @@ export const createStories = async (req, res) => {
 
 export const getStories = async (req, res) => {
   const userId = req.userId;
+  // console.log('userid for getttt', userId);
 
   try {
     let allStories;
@@ -96,6 +97,7 @@ export const getStories = async (req, res) => {
       // If the user is logged in, fetch the user's stories first, followed by others
       const userStories = await Story.find({ userId });
       const otherStories = await Story.find({ userId: { $ne: userId } });
+
       allStories = [...userStories, ...otherStories];
     } else {
       // If the user is not logged in, fetch all stories
@@ -170,11 +172,17 @@ export const updateStory = async (req, res) => {
     if (category) story.category = category;
 
     await story.save();
-
     return res.status(200).json({
       success: true,
       message: 'Story updated successfully',
-      data: story,
+      data: {
+        _id: story._id,
+        heading: story.heading,
+        description: story.description,
+        image: story.image,
+        category: story.category,
+        userId: story.userId, // Include userId for validation
+      },
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Server Error' });
@@ -188,7 +196,9 @@ export const filterStoriesByCategory = async (req, res) => {
   try {
     if (
       !category ||
-      !['gaming', 'news', 'sports', 'food', 'india', 'world'].includes(category)
+      !['Gaming', 'Animals', 'Sports', 'Food', 'India', 'People'].includes(
+        category
+      )
     ) {
       return res
         .status(400)
@@ -232,6 +242,7 @@ export const filterStoriesByCategory = async (req, res) => {
 
 export const bookmarkStory = async (req, res) => {
   const { storyId } = req.body;
+  console.log('storyIdbs', storyId);
 
   try {
     const user = await User.findById(req.userId);
@@ -240,21 +251,58 @@ export const bookmarkStory = async (req, res) => {
         .status(404)
         .json({ success: false, message: 'User not found' });
 
+    const story = await Story.findById(storyId);
+    if (!story)
+      return res
+        .status(404)
+        .json({ success: false, message: 'Story not found' });
+
     // Check if the story is already bookmarked
-    if (user.bookmarkedStories.includes(storyId)) {
+    if (story.savedBy.includes(req.userId)) {
       return res
         .status(400)
         .json({ success: false, message: 'Story already bookmarked' });
     }
 
-    user.bookmarkedStories.push(storyId);
-    await user.save();
+    story.savedBy.push(req.userId); // Add user to savedBy
+    await story.save();
 
     res
       .status(200)
       .json({ success: true, message: 'Story bookmarked successfully' });
   } catch (error) {
     console.error('Error bookmarking story:', error.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
+export const removeBookmark = async (req, res) => {
+  const { storyId } = req.params; // Get storyId from req.params
+
+  try {
+    const user = await User.findById(req.userId);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
+
+    const story = await Story.findById(storyId);
+    if (!story)
+      return res
+        .status(404)
+        .json({ success: false, message: 'Story not found' });
+
+    // Remove the user ID from the savedBy array
+    story.savedBy = story.savedBy.filter(
+      (id) => id.toString() !== req.userId.toString()
+    );
+    await story.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: 'Story removed from bookmarks' });
+  } catch (error) {
+    console.error('Error removing bookmark:', error.message);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
@@ -267,15 +315,16 @@ export const getBookmarkedStories = async (req, res) => {
         .status(404)
         .json({ success: false, message: 'User not found' });
 
-    res.status(200).json({ success: true, data: user.bookmarkedStories });
+    const bookmarkedStories = await Story.find({ savedBy: req.userId });
+    res.status(200).json({ success: true, data: bookmarkedStories });
   } catch (error) {
     console.error('Error fetching bookmarked stories:', error.message);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 
-export const removeBookmark = async (req, res) => {
-  const { storyId } = req.params;
+export const likeStory = async (req, res) => {
+  const { storyId } = req.body; // Make sure you're receiving the storyId from the request body
 
   try {
     const user = await User.findById(req.userId);
@@ -284,62 +333,21 @@ export const removeBookmark = async (req, res) => {
         .status(404)
         .json({ success: false, message: 'User not found' });
 
-    user.bookmarkedStories = user.bookmarkedStories.filter(
-      (id) => id.toString() !== storyId
-    );
-    await user.save();
-
-    res
-      .status(200)
-      .json({ success: true, message: 'Story removed from bookmarks' });
-  } catch (error) {
-    console.error('Error removing bookmark:', error.message);
-    res.status(500).json({ success: false, message: 'Server Error' });
-  }
-};
-
-export const likeStory = async (req, res) => {
-  const { storyId } = req.body;
-  const userId = req.userId;
-
-  if (!storyId) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Story ID is required' });
-  }
-
-  try {
     const story = await Story.findById(storyId);
-
-    if (!story) {
+    if (!story)
       return res
         .status(404)
         .json({ success: false, message: 'Story not found' });
-    }
 
     // Check if the user has already liked the story
-    if (story.likedBy.includes(userId)) {
-      // User has already liked the story, so unlike it
-      story.likes -= 1;
-      story.likedBy = story.likedBy.filter(
-        (id) => id.toString() !== userId.toString()
-      );
+    if (!story.likedBy.includes(user._id)) {
+      story.likedBy.push(user._id); // Add the user to the likedBy array
+      story.likes += 1; // Increment the like count
+      await Promise.all([user.save(), story.save()]); // Save changes
+      res.status(200).json({ success: true, message: 'Story liked' });
     } else {
-      // User has not liked the story yet, so like it
-      story.likes += 1;
-      story.likedBy.push(userId);
+      res.status(400).json({ success: false, message: 'Story already liked' });
     }
-
-    // Save the updated story
-    await story.save();
-
-    res.status(200).json({
-      success: true,
-      message: `Story ${
-        story.likedBy.includes(userId) ? 'liked' : 'unliked'
-      } successfully`,
-      data: story,
-    });
   } catch (error) {
     console.error('Error liking story:', error.message);
     res.status(500).json({ success: false, message: 'Server Error' });
@@ -362,9 +370,11 @@ export const unlikeStory = async (req, res) => {
         .status(404)
         .json({ success: false, message: 'Story not found' });
 
-    if (user.likedStories.includes(storyId)) {
-      user.likedStories = user.likedStories.filter(
-        (id) => id.toString() !== storyId
+    // Check if the user has liked the story
+    if (story.likedBy.includes(user._id)) {
+      // Remove the user from the likedBy array
+      story.likedBy = story.likedBy.filter(
+        (id) => id.toString() !== user._id.toString()
       );
       story.likes -= 1; // Decrement the like count
       await Promise.all([user.save(), story.save()]); // Save user and story changes
