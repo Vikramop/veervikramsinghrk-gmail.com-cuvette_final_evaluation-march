@@ -5,9 +5,9 @@ import { useStoryStore } from '../store/story';
 import { toast } from 'react-hot-toast';
 
 const EditStoryModal = ({ onClose, storyData }) => {
-  //   console.log('Modal opened with story data222:', storyData);
+  // console.log('Modal opened with story data222:', storyData);
   const storyId = storyData._id;
-  //   console.log('storyId', storyId);
+  // console.log('storyId', storyId);
   const [tabs, setTabs] = useState(['Tab 1']);
   const [formData, setFormData] = useState([]);
   const [currentTab, setCurrentTab] = useState(0);

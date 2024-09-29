@@ -65,6 +65,8 @@ const Header = ({ fetchStory, clearStories }) => {
     localStorage.removeItem('token');
     clearStories();
     fetchStory();
+    console.log('log out fetchStory', fetchStory);
+
     toast.success('logout successful!');
     navigate('/');
   };

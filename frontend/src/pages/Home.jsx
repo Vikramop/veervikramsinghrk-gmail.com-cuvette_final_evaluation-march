@@ -64,14 +64,10 @@ const Home = () => {
     console.log('Stories:', stories);
     console.log('Attempting to bookmark story with ID:', storyId);
 
-    // Call the toggleBookmark function with the story ID
     toggleBookmark(storyId).then(() => {
-      // Log bookmarks after attempting to toggle
       console.log('Updated Bookmarks:', bookmarks);
 
-      // Check if the user is logged in
       if (isLoggedIn) {
-        // Check if the story is already bookmarked
         const isBookmarked = bookmarks.includes(storyId);
 
         console.log(isBookmarked ? 'Bookmark removed' : 'Story bookmarked');
@@ -278,7 +274,11 @@ const Home = () => {
 
           {/* Stories by Categories */}
           {predefinedCategories.map((category) => {
+            // console.log('categoryStories:', categoryStories);
+            // console.log('category:', category);
             const stories = categoryStories[category] || [];
+            console.log('storiessss', stories);
+
             return (
               <div key={category} className="category-container">
                 <h4 className="category-heading">
@@ -289,8 +289,17 @@ const Home = () => {
                     stories
                       .slice(0, categoryShowAll[category] ? stories.length : 4)
                       .map((story) => {
+                        // const token = localStorage.getItem('token');
+
+                        // if (!token) {
+                        //   console.log('Please log in to perform this action.');
+                        //   return;
+                        // }
+
                         const isLiked = likedStories.includes(story._id);
                         const likeCount = likeCounts[story._id] || 0;
+                        const isBookmarked = bookmarks.includes(story._id);
+                        console.log('isBookmarked', isBookmarked);
 
                         return (
                           <div key={story._id} className="story-card">
@@ -333,24 +342,18 @@ const Home = () => {
                             )}
                             <button
                               onClick={() => handleBookmarkClick(story._id)} // Call toggleBookmark with story ID
-                              className={`bookmarks ${
-                                story.savedBy.includes(decodedToken._id)
-                                  ? 'bookmarked'
-                                  : ''
-                              }`}
+                              className="bookmarks"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 strokeWidth="2"
                                 stroke={
-                                  story.savedBy.includes(decodedToken._id) &&
-                                  isLoggedIn
+                                  isBookmarked && isLoggedIn
                                     ? '#0000FF'
                                     : '#000'
                                 } // Change to blue if bookmarked
                                 fill={
-                                  story.savedBy.includes(decodedToken._id) &&
-                                  isLoggedIn
+                                  isBookmarked && isLoggedIn
                                     ? '#0000FF'
                                     : '#FFF'
                                 } // Change to blue if bookmarked
@@ -431,7 +434,7 @@ const Home = () => {
       </div>
 
       {isEditModalOpen && (
-        <EditStoryModal story={selectedStory} onClose={closeEditModal} />
+        <EditStoryModal storyData={selectedStory} onClose={closeEditModal} />
       )}
     </div>
   );
