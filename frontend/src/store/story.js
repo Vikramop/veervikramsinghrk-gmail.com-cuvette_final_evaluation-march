@@ -429,4 +429,28 @@ export const useStoryStore = create((set, get) => ({
       toast.error(error.message || 'An error occurred while liking the story');
     }
   },
+
+  shareStory: async (storyId) => {
+    // console.log('storyIdssss', storyId);
+
+    try {
+      const res = await fetch(`/api/story/share/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ storyId }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to share story');
+      }
+
+      const data = await res.json();
+      return data; // Return the response data for further handling
+    } catch (error) {
+      console.error('Error sharing story:', error);
+      throw new Error('An error occurred while sharing the story.'); // Throw an error for handling in UI
+    }
+  },
 }));

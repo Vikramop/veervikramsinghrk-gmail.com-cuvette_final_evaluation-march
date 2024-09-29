@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import './Home.css';
+import share from '../assets/share.png';
 import { useStoryStore } from '../store/story';
 import { jwtDecode } from 'jwt-decode';
 import EditStoryModal from '../components/EditStoryModal .jsx';
@@ -8,8 +9,14 @@ import Filters from '../components/Filters';
 
 const Home = () => {
   const token = localStorage.getItem('token');
-  const { fetchStory, stories, toggleBookmark, bookmarks, toggleLike } =
-    useStoryStore();
+  const {
+    fetchStory,
+    stories,
+    toggleBookmark,
+    bookmarks,
+    toggleLike,
+    shareStory,
+  } = useStoryStore();
   const [likedStories, setLikedStories] = useState([]);
   const [likeCounts, setLikeCounts] = useState({});
   const [decodedToken, setDecodedToken] = useState(null);
@@ -160,6 +167,22 @@ const Home = () => {
     await toggleLike(storyId, isLiked);
   };
 
+  const handleShareClick = async (storyId) => {
+    console.log('storyIdsssss', storyId);
+
+    try {
+      const data = await shareStory(storyId);
+
+      if (data.success) {
+        alert(`Share this link: ${data.shareLink}`);
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   return (
     <div>
       <div className="h-container">
@@ -277,7 +300,7 @@ const Home = () => {
             // console.log('categoryStories:', categoryStories);
             // console.log('category:', category);
             const stories = categoryStories[category] || [];
-            console.log('storiessss', stories);
+            // console.log('storiessss', stories);
 
             return (
               <div key={category} className="category-container">
@@ -289,13 +312,6 @@ const Home = () => {
                     stories
                       .slice(0, categoryShowAll[category] ? stories.length : 4)
                       .map((story) => {
-                        // const token = localStorage.getItem('token');
-
-                        // if (!token) {
-                        //   console.log('Please log in to perform this action.');
-                        //   return;
-                        // }
-
                         const isLiked = likedStories.includes(story._id);
                         const likeCount = likeCounts[story._id] || 0;
                         const isBookmarked = bookmarks.includes(story._id);
@@ -411,6 +427,13 @@ const Home = () => {
                                 {likeCount}
                               </span>{' '}
                               {/* Display like count */}
+                            </button>
+                            {/* share */}
+                            <button className="share">
+                              <img
+                                src={share}
+                                onClick={() => handleShareClick(story._id)}
+                              />
                             </button>
                           </div>
                         );

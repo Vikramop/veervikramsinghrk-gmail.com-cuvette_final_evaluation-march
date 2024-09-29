@@ -229,7 +229,7 @@
   left: 25px;
   margin: 0;
   padding: 0;
-  background-color: #000000;
+  background-color: transparent;
   border: none;
   z-index: 9;
 }
@@ -251,7 +251,16 @@
   position: absolute;
   bottom: 10px;
   right: 25px;
-  background-color: #000000;
+  background-color: transparent;
+  border: none;
+  z-index: 9;
+}
+
+.share {
+  position: absolute;
+  top: 15px;
+  right: 25px;
+  background-color: transparent;
   border: none;
   z-index: 9;
 }
