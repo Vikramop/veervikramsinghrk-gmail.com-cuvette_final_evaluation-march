@@ -6,6 +6,8 @@ import { useStoryStore } from '../store/story';
 import { jwtDecode } from 'jwt-decode';
 import EditStoryModal from '../components/EditStoryModal .jsx';
 import Filters from '../components/Filters';
+import toast from 'react-hot-toast';
+import StoryModal from '../components/StoryModal .jsx';
 
 const Home = () => {
   const token = localStorage.getItem('token');
@@ -25,6 +27,39 @@ const Home = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStory, setSelectedStory] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [currentStoryId, setCurrentStoryId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const openStoryModal = (category, storyId) => {
+    setSelectedCategory(category);
+    setCurrentStoryId(storyId);
+    setShowModal(true);
+  };
+
+  // const openStoryModal = (category, storyIndex) => {
+  //   console.log('Stories: ', stories); // Check the stories array
+  //   console.log('Story Index: ', storyIndex); // Check the clicked index
+
+  //   if (storyIndex < 0 || storyIndex >= stories.length) {
+  //     console.error('Invalid story index: ', storyIndex);
+  //     return; // Prevent opening modal if index is invalid
+  //   }
+
+  //   const selectedStory = stories[storyIndex]; // Get the selected story
+
+  //   if (!selectedStory) {
+  //     console.error('Selected story is undefined');
+  //     return; // Prevent setting state if story is not found
+  //   }
+
+  //   setSelectedCategory(category);
+  //   setCurrentStoryId(selectedStory._id); // Now this should work
+  //   setShowModal(true); // Open the modal
+  // };
+
+  const closeStoryModal = () => {
+    setShowModal(false);
+  };
   const [categoryStories, setCategoryStories] = useState({
     userStories: [],
     Foods: [],
@@ -168,18 +203,22 @@ const Home = () => {
   };
 
   const handleShareClick = async (storyId) => {
-    console.log('storyIdsssss', storyId);
-
     try {
+      // Call the store function to share the story
       const data = await shareStory(storyId);
 
       if (data.success) {
-        alert(`Share this link: ${data.shareLink}`);
+        // Use the Clipboard API to copy the link
+        await navigator.clipboard.writeText(data.shareLink);
+
+        // Optionally show a success message or use a toast
+        toast.success('Link copied to clipboard!');
       } else {
-        alert(data.message);
+        toast.error(data.message);
       }
     } catch (error) {
-      alert(error.message);
+      toast.error('Failed to share the story.');
+      console.error('Error sharing story:', error);
     }
   };
 
@@ -315,10 +354,16 @@ const Home = () => {
                         const isLiked = likedStories.includes(story._id);
                         const likeCount = likeCounts[story._id] || 0;
                         const isBookmarked = bookmarks.includes(story._id);
-                        console.log('isBookmarked', isBookmarked);
+                        // console.log('isBookmarked', isBookmarked);
 
                         return (
-                          <div key={story._id} className="story-card">
+                          <div
+                            key={story._id}
+                            className="story-card"
+                            onClick={() => {
+                              openStoryModal(category);
+                            }}
+                          >
                             {isVideo(story.image) ? (
                               story.image.includes('youtube.com') ||
                               story.image.includes('youtu.be') ? (
@@ -426,9 +471,8 @@ const Home = () => {
                               >
                                 {likeCount}
                               </span>{' '}
-                              {/* Display like count */}
                             </button>
-                            {/* share */}
+
                             <button className="share">
                               <img
                                 src={share}
@@ -458,6 +502,20 @@ const Home = () => {
 
       {isEditModalOpen && (
         <EditStoryModal storyData={selectedStory} onClose={closeEditModal} />
+      )}
+      {showModal && selectedCategory && (
+        <StoryModal
+          stories={categoryStories[selectedCategory]}
+          currentStoryId={setCurrentStoryId}
+          onClose={closeStoryModal}
+          isVideo={isVideo}
+          getYouTubeId={getYouTubeId}
+          likeCounts={likeCounts}
+          likedStories={likedStories}
+          handleShareClick={handleShareClick}
+          handleBookmarkClick={handleBookmarkClick}
+          handleLikeClick={handleLikeClick}
+        />
       )}
     </div>
   );

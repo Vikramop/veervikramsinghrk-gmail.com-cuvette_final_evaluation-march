@@ -32,7 +32,7 @@ const BookmarkPage = () => {
     <div className="bookmark-container">
       <h2>Your Bookmarked Stories</h2>
 
-      <div>
+      <div className="bookmarkz">
         {bookmarkedStories.length > 0 ? (
           bookmarkedStories.map((story) => {
             return (
