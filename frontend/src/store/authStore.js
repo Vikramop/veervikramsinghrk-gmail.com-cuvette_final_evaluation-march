@@ -19,8 +19,7 @@ export const userAuthStore = create((set) => ({
       });
       set({
         user: response.data.user,
-        isAuthenticated: true,
-        isLoading: false,
+        isAuthenticated: false,
       });
       console.log('response', response.data);
       return response;
@@ -37,14 +36,11 @@ export const userAuthStore = create((set) => ({
     const token = localStorage.getItem('token');
     console.log('Checking auth, token found:', token); // Debug log
     if (token) {
-      console.log('1');
-
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      console.log('2');
+
       try {
-        console.log('3');
         const response = await axios.get(`${API_URL}/check-auth`);
-        console.log('4');
+
         set({
           user: response.data.user,
           isAuthenticated: true,

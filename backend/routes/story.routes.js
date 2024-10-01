@@ -33,7 +33,7 @@ router.delete('/bookmark/:storyId', verifyToken, removeBookmark);
 
 router.post('/like/:storyId', verifyToken, likeStory);
 router.delete('/like/:storyId', verifyToken, unlikeStory);
-router.get('/like', verifyToken, getLikedStories);
+router.get('/like', optionalVerifyToken, getLikedStories);
 
 router.post('/share', shareStory);
 

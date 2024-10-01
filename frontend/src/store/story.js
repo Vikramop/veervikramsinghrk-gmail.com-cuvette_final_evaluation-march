@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { jwtDecode } from 'jwt-decode';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 
 export const useStoryStore = create((set, get) => ({
   stories: [],
@@ -338,10 +337,6 @@ export const useStoryStore = create((set, get) => ({
     }
 
     try {
-      // const decodedToken = jwtDecode(token);
-      // const userId = decodedToken._id; // Extract user ID from token
-      // console.log('User ID22:', userId);
-
       const res = await fetch(`/api/story/bookmark/`, {
         method: 'GET',
         headers: {
@@ -362,7 +357,7 @@ export const useStoryStore = create((set, get) => ({
         bookmarkedStories: data.data || [], // Assuming data contains an array of bookmarked stories
       }));
 
-      toast.success('Bookmarked stories fetched successfully');
+      // toast.success('Bookmarked stories fetched successfully');
     } catch (error) {
       console.error('Error fetching bookmarked stories:', error);
       toast.error(
@@ -433,14 +428,40 @@ export const useStoryStore = create((set, get) => ({
   getLikedStories: async () => {
     const token = localStorage.getItem('token');
 
-    if (!token) {
-      toast.error('Please log in to view liked stories.');
-      return { likedStories: [], likeCounts: [] }; // Return empty arrays if not logged in
-    }
-
     try {
+      if (!token) {
+        // Fetch all stories and their like counts (publicly accessible, no login required)
+        const res = await fetch('/api/story/like', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || 'Failed to fetch like counts');
+        }
+
+        // Assuming the response contains all stories and their like counts
+        const storiesWithLikeCounts = data.data.map((story) => ({
+          _id: story._id,
+          likeCount: story.likes || 0, // Extract like counts, defaulting to 0 if not available
+        }));
+
+        console.log(
+          'Like counts for all stories (logged out)',
+          storiesWithLikeCounts
+        );
+
+        return {
+          likedStories: [], // No liked stories when logged out
+          likeCounts: storiesWithLikeCounts, // All stories' like counts
+        };
+      }
+
+      // Logged-in user: Fetch liked stories and their like counts
       const res = await fetch('/api/story/like', {
-        // Update to the correct endpoint
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -453,8 +474,10 @@ export const useStoryStore = create((set, get) => ({
         throw new Error(data.message || 'Failed to fetch liked stories');
       }
 
-      const likedStories = data.data; // Assuming the API response has a 'data' property with the liked stories
-      const likeCounts = likedStories.map((story) => story.likes); // Example of extracting like counts
+      const likedStories = data.data; // Assuming the API response has a 'data' property with liked stories
+      const likeCounts = likedStories.map((story) => story.likes || 0); // Extract like counts, defaulting to 0 if not available
+
+      console.log('Like counts for liked stories (logged in)', likeCounts);
 
       // Update the store with liked stories
       set((prev) => ({
@@ -464,9 +487,12 @@ export const useStoryStore = create((set, get) => ({
         })),
       }));
 
-      toast.success('Liked stories fetched successfully');
+      // toast.success('Liked stories fetched successfully');
 
-      return { likedStories, likeCounts }; // Return liked stories and like counts
+      return {
+        likedStories, // Liked stories for the logged-in user
+        likeCounts, // Like counts for those stories
+      };
     } catch (error) {
       console.error('Error fetching liked stories:', error);
       toast.error(

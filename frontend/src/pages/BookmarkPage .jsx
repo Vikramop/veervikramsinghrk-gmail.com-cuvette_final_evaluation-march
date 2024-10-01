@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useStoryStore } from '../store/story'; // Adjust the import path
 import './Home.css'; // Make sure to install react-toastify
+import Header from '../components/Header';
 
 const BookmarkPage = () => {
   const { bookmarkedStories, getBookmarkedStories } = useStoryStore();
@@ -29,55 +30,58 @@ const BookmarkPage = () => {
   };
 
   return (
-    <div className="bookmark-container">
-      <h2>Your Bookmarked Stories</h2>
+    <>
+      <Header />
+      <div className="bookmark-container">
+        <h2>Your Bookmarked Stories</h2>
 
-      <div className="bookmarkz">
-        {bookmarkedStories.length > 0 ? (
-          bookmarkedStories.map((story) => {
-            return (
-              <div key={story._id} className="story-card">
-                {isVideo(story.image) ? (
-                  story.image.includes('youtube.com') ||
-                  story.image.includes('youtu.be') ? (
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      src={`https://www.youtube.com/embed/${getYouTubeId(
-                        story.image
-                      )}`}
-                      frameBorder="0"
-                      allow="autoplay; encrypted-media"
-                      allowFullScreen
-                      className="background-video"
-                    />
+        <div className="bookmarkz">
+          {bookmarkedStories.length > 0 ? (
+            bookmarkedStories.map((story) => {
+              return (
+                <div key={story._id} className="story-card">
+                  {isVideo(story.image) ? (
+                    story.image.includes('youtube.com') ||
+                    story.image.includes('youtu.be') ? (
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${getYouTubeId(
+                          story.image
+                        )}`}
+                        frameBorder="0"
+                        allow="autoplay; encrypted-media"
+                        allowFullScreen
+                        className="background-video"
+                      />
+                    ) : (
+                      <video
+                        autoPlay
+                        loop
+                        muted
+                        className="background-video"
+                        src={story.image}
+                        type="video/mp4"
+                      />
+                    )
                   ) : (
-                    <video
-                      autoPlay
-                      loop
-                      muted
-                      className="background-video"
-                      src={story.image}
-                      type="video/mp4"
-                    />
-                  )
-                ) : (
-                  <div
-                    className="background-image"
-                    style={{ backgroundImage: `url(${story.image})` }}
-                  >
-                    <p className="story-heading">{story.heading}</p>
-                    <p className="story-description">{story.description}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })
-        ) : (
-          <p>No bookmarked stories found.</p>
-        )}
+                    <div
+                      className="background-image"
+                      style={{ backgroundImage: `url(${story.image})` }}
+                    >
+                      <p className="story-heading">{story.heading}</p>
+                      <p className="story-description">{story.description}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <p>No bookmarked stories found.</p>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

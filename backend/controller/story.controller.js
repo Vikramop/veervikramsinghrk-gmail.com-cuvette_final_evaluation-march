@@ -388,9 +388,44 @@ export const unlikeStory = async (req, res) => {
   }
 };
 
+// export const getLikedStories = async (req, res) => {
+//   try {
+//     // Find the user by their ID and populate likedStories
+//     const user = await User.findById(req.userId).populate('likedStories');
+//     if (!user) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: 'User not found' });
+//     }
+
+//     // Find stories liked by the user
+//     const likedStories = await Story.find({ likedBy: req.userId });
+
+//     // Return the liked stories
+//     res.status(200).json({ success: true, data: likedStories });
+//   } catch (error) {
+//     console.error('Error fetching liked stories:', error.message);
+//     res.status(500).json({ success: false, message: 'Server Error' });
+//   }
+// };
+
 export const getLikedStories = async (req, res) => {
   try {
-    // Find the user by their ID and populate likedStories
+    if (!req.userId) {
+      // Case: User is NOT logged in
+      const allStories = await Story.find({}); // Fetch all stories
+
+      const storiesWithLikeCounts = allStories.map((story) => {
+        return { _id: story._id, likeCount: story.likes }; // Return story _id and the 'likes' field directly
+      });
+
+      // Return all stories with their like counts
+      return res
+        .status(200)
+        .json({ success: true, data: storiesWithLikeCounts });
+    }
+
+    // Case: User is logged in
     const user = await User.findById(req.userId).populate('likedStories');
     if (!user) {
       return res
@@ -398,14 +433,22 @@ export const getLikedStories = async (req, res) => {
         .json({ success: false, message: 'User not found' });
     }
 
-    // Find stories liked by the user
-    const likedStories = await Story.find({ likedBy: req.userId });
+    // Fetch all stories and include whether the logged-in user has liked each
+    const allStories = await Story.find({});
 
-    // Return the liked stories
-    res.status(200).json({ success: true, data: likedStories });
+    const storiesWithLikeCounts = allStories.map((story) => {
+      const isLikedByUser = user.likedStories.some((likedStory) =>
+        likedStory._id.equals(story._id)
+      );
+
+      return { _id: story._id, likeCount: story.likes, isLikedByUser }; // Use the 'likes' field for like count and check if user liked it
+    });
+
+    // Return the stories with like counts and whether the user has liked each
+    return res.status(200).json({ success: true, data: storiesWithLikeCounts });
   } catch (error) {
     console.error('Error fetching liked stories:', error.message);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    return res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 

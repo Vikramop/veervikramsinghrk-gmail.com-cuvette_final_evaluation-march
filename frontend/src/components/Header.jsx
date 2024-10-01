@@ -6,8 +6,10 @@ import { useNavigate } from 'react-router-dom';
 import pic from '../assets/happy.jpg';
 import CreateStoryModal from './CreateStoryModal .jsx';
 import { toast } from 'react-hot-toast';
+import { useStoryStore } from '../store/story.js';
 
-const Header = ({ fetchStory, clearStories }) => {
+const Header = ({ setLikedStories, setLikeCounts }) => {
+  const { fetchStory, clearStories, getLikedStories } = useStoryStore();
   const [showModal, setShowModal] = useState(false);
   const [showStoryModal, setShowStoryModal] = useState(false);
   const [modalHeading, setModalHeading] = useState('');
@@ -37,8 +39,12 @@ const Header = ({ fetchStory, clearStories }) => {
     e.preventDefault();
     try {
       await signup(userName, password);
-      navigate('/');
       toast.success('Sign-up successful!');
+
+      // After successful signup, navigate to login modal
+      setModalHeading('Login'); // Change heading to 'Login'
+      setShowModal(true); // Show the login modal
+
       setPassword('');
       setUserName('');
     } catch (err) {
@@ -54,20 +60,35 @@ const Header = ({ fetchStory, clearStories }) => {
       toast.success('Login successful!');
       setPassword('');
       setUserName('');
+
+      // After successful login, fetch liked stories for the user
+      const response = await getLikedStories(); // Make sure this function fetches liked stories for the logged-in user
+      if (response && Array.isArray(response.likedStories)) {
+        setLikedStories(response.likedStories); // Set the likedStories from the response
+        const newLikeCounts = {};
+        response.likedStories.forEach((story) => {
+          newLikeCounts[story._id] = story.likes; // Assuming 'likes' is the field containing like count
+        });
+        setLikeCounts(newLikeCounts); // Set the like counts for the stories
+      }
+
+      // You may want to also clear any previously liked stories from localStorage
+      localStorage.removeItem('likedStories'); // Clear liked stories in localStorage if needed
     } catch (err) {
       console.error('Login failed:', err);
-      toast.error(error || 'Login failed. Please try again.');
+      toast.error(err.message || 'Login failed. Please try again.');
     }
   };
 
   const handleLogout = () => {
     logout();
     localStorage.removeItem('token');
-    clearStories();
-    fetchStory();
-    console.log('log out fetchStory', fetchStory);
+    localStorage.removeItem('likedStories'); // Clear liked stories
+    localStorage.removeItem('likeCounts'); // Clear like counts
+    clearStories(); // Reset stories state
+    fetchStory(); // Fetch fresh stories after logout
 
-    toast.success('logout successful!');
+    toast.success('Logout successful!');
     navigate('/');
   };
 

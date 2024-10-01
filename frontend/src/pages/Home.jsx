@@ -38,27 +38,6 @@ const Home = () => {
     setShowModal(true);
   };
 
-  // const openStoryModal = (category, storyIndex) => {
-  //   console.log('Stories: ', stories); // Check the stories array
-  //   console.log('Story Index: ', storyIndex); // Check the clicked index
-
-  //   if (storyIndex < 0 || storyIndex >= stories.length) {
-  //     console.error('Invalid story index: ', storyIndex);
-  //     return; // Prevent opening modal if index is invalid
-  //   }
-
-  //   const selectedStory = stories[storyIndex]; // Get the selected story
-
-  //   if (!selectedStory) {
-  //     console.error('Selected story is undefined');
-  //     return; // Prevent setting state if story is not found
-  //   }
-
-  //   setSelectedCategory(category);
-  //   setCurrentStoryId(selectedStory._id); // Now this should work
-  //   setShowModal(true); // Open the modal
-  // };
-
   const closeStoryModal = () => {
     setShowModal(false);
   };
@@ -82,8 +61,8 @@ const Home = () => {
   }, [token]);
 
   const predefinedCategories = [
-    'India',
     'Food',
+    'India',
     'Sports',
     'Gaming',
     'People',
@@ -113,6 +92,7 @@ const Home = () => {
 
       if (isLoggedIn) {
         const isBookmarked = bookmarks.includes(storyId);
+        console.log('isBookmarked', isBookmarked);
 
         console.log(isBookmarked ? 'Bookmark removed' : 'Story bookmarked');
       } else {
@@ -181,79 +161,6 @@ const Home = () => {
     return match ? match[1] : null; // Return the video ID if found
   };
 
-  // ////////////////////////////////
-  useEffect(() => {
-    const fetchLikedStoriesFromLocalStorage = () => {
-      const storedLikes = localStorage.getItem('likedStories');
-      if (storedLikes) {
-        const parsedLikes = JSON.parse(storedLikes);
-        setLikedStories(parsedLikes);
-      } else {
-        console.log('No liked stories found in local storage.');
-      }
-    };
-
-    fetchLikedStoriesFromLocalStorage();
-  }, []);
-  useEffect(() => {
-    const fetchLikedStories = async () => {
-      const response = await getLikedStories(); // Fetch liked stories from backend or local storage
-      console.log('Fetched liked stories:', response); // Log the entire response
-
-      if (response && Array.isArray(response.likedStories)) {
-        setLikedStories(response.likedStories); // Set the likedStories array from the response
-      } else {
-        console.error(
-          'Fetched liked stories is not an array:',
-          response.likedStories
-        );
-        setLikedStories([]); // Reset to an empty array if it's not an array
-      }
-    };
-
-    fetchLikedStories();
-  }, []);
-
-  const handleLikeClick = async (storyId) => {
-    if (!isLoggedIn) {
-      toast.error('Please log in to like stories.');
-      return;
-    }
-
-    // Use the updated likedStories state which is an array
-    const isLiked =
-      likedStories &&
-      Array.isArray(likedStories) &&
-      likedStories.some((story) => story._id === storyId);
-    console.log('isLiked', isLiked);
-
-    if (isLiked) {
-      // Remove from liked stories
-      setLikedStories((prevLikes) => {
-        const newLikes = prevLikes.filter((story) => story._id !== storyId);
-        localStorage.setItem('likedStories', JSON.stringify(newLikes)); // Persisting to local storage
-        return newLikes;
-      });
-      setLikeCounts((prevCounts) => ({
-        ...prevCounts,
-        [storyId]: (prevCounts[storyId] || 0) - 1, // Decrease like count
-      }));
-    } else {
-      // Add to liked stories
-      setLikedStories((prevLikes) => {
-        const newLikes = [...prevLikes, { _id: storyId }]; // Add a new object with the storyId
-        localStorage.setItem('likedStories', JSON.stringify(newLikes)); // Persisting to local storage
-        return newLikes;
-      });
-      setLikeCounts((prevCounts) => ({
-        ...prevCounts,
-        [storyId]: (prevCounts[storyId] || 0) + 1, // Increase like count
-      }));
-    }
-
-    await toggleLike(storyId, isLiked);
-  };
-
   const handleShareClick = async (storyId) => {
     try {
       // Call the store function to share the story
@@ -274,8 +181,120 @@ const Home = () => {
     }
   };
 
+  // ////////////////////////////////
+
+  useEffect(() => {
+    const fetchLikeCounts = async () => {
+      try {
+        const { likeCounts } = await getLikedStories(); // Fetch like counts from the backend
+        console.log('Fetched like counts:', likeCounts); // Log the like counts for verification
+        setLikeCounts(likeCounts); // Update the state with like counts
+      } catch (error) {
+        console.error('Error fetching like counts:', error); // Log any errors
+      }
+    };
+
+    // Fetch story and like counts on component mount
+    fetchStory(); // Fetch stories
+    fetchLikeCounts(); // Fetch like counts regardless of user login
+  }, [fetchStory]);
+
+  useEffect(() => {
+    const fetchDataFromBackend = async () => {
+      try {
+        // Fetch like counts for all users, regardless of login status
+        const { likeCounts } = await getLikedStories();
+        console.log('Fetched like counts for all stories:', likeCounts); // Log like counts
+
+        setLikeCounts(likeCounts); // Set total like counts for each story
+
+        // Fetch liked stories only if the user is logged in
+        if (isLoggedIn) {
+          const { likedStories } = await getLikedStories();
+          console.log(
+            'Fetched liked stories for logged-in user:',
+            likedStories
+          ); // Log liked stories
+          const likedStoriesWithCounts = likedStories.map((story) => ({
+            _id: story._id,
+            likes: story.likes || 0, // Get the like count for each liked story
+          }));
+          console.log('Liked stories with counts:', likedStoriesWithCounts); // Log liked stories with their counts
+          setLikedStories(likedStories); // Set liked stories for the logged-in user
+        } else {
+          setLikedStories([]); // Clear liked stories if not logged in
+        }
+      } catch (error) {
+        console.error('Error fetching data from backend:', error);
+        // Handle error (e.g., set error state, show a toast, etc.)
+      }
+    };
+
+    fetchDataFromBackend();
+  }, [isLoggedIn]);
+
+  // useEffect(() => {
+  //   const fetchLikedStoriesFromLocalStorage = () => {
+  //     const storedLikes = localStorage.getItem('likedStories');
+  //     const storedLikeCounts = localStorage.getItem('likeCounts');
+
+  //     if (storedLikes) {
+  //       setLikedStories(JSON.parse(storedLikes)); // Load liked stories from local storage
+  //     }
+
+  //     if (storedLikeCounts) {
+  //       setLikeCounts(JSON.parse(storedLikeCounts)); // Load like counts from local storage
+  //     }
+  //   };
+
+  //   fetchLikedStoriesFromLocalStorage();
+  // }, []);
+
+  const handleLikeClick = async (storyId) => {
+    // Check if the user is logged in
+    if (!isLoggedIn) {
+      toast.error('Please log in to like stories.');
+      return;
+    }
+
+    // Check if the story is currently liked by the user
+    const isLiked = likedStories.some((story) => story._id === storyId);
+
+    // Update liked stories and like counts based on current state
+    setLikedStories((prevLikes) => {
+      let newLikes;
+      if (isLiked) {
+        // If already liked, remove from liked stories
+        newLikes = prevLikes.filter((story) => story._id !== storyId);
+      } else {
+        // If not liked, add to liked stories
+        newLikes = [...prevLikes, { _id: storyId }];
+      }
+      // Persist liked stories to local storage
+      localStorage.setItem('likedStories', JSON.stringify(newLikes));
+      return newLikes;
+    });
+
+    setLikeCounts((prevCounts) => {
+      const newCounts = { ...prevCounts };
+      if (isLiked) {
+        newCounts[storyId] = (newCounts[storyId] || 0) - 1;
+        if (newCounts[storyId] <= 0) delete newCounts[storyId];
+      } else {
+        newCounts[storyId] = (newCounts[storyId] || 0) + 1;
+      }
+      console.log('Updated like counts:', newCounts); // Debugging line
+      localStorage.setItem('likeCounts', JSON.stringify(newCounts));
+      return newCounts;
+    });
+
+    // Call the toggleLike function (make sure it handles the backend update properly)
+    await toggleLike(storyId, isLiked);
+  };
+
   return (
     <div>
+      <Header setLikedStories={setLikedStories} setLikeCounts={setLikeCounts} />
       <div className="h-container">
         <Filters onCategorySelect={handleCategorySelect} />
 
@@ -375,7 +394,13 @@ const Home = () => {
                       );
                     })
                 ) : (
-                  <p>No stories available</p>
+                  <p
+                    style={{
+                      textAlign: 'center',
+                    }}
+                  >
+                    No stories available
+                  </p>
                 )}
               </div>
               {categoryStories.userStories.length > 4 && (
@@ -403,8 +428,12 @@ const Home = () => {
                         const isLiked = likedStories.some(
                           (likedStory) => likedStory._id === story._id
                         );
-                        const likeCount = likeCounts[story._id] || 0;
-                        console.log('isLiked', isLiked);
+
+                        // Find the liked story object
+                        const likedStory = likedStories.find(
+                          (likedStory) => likedStory._id === story._id
+                        );
+                        const likeCount = likedStory ? likedStory.likeCount : 0; // Use the likeCount from likedStories
 
                         const isBookmarked = bookmarks.includes(story._id);
 
@@ -506,9 +535,9 @@ const Home = () => {
                                         : '#FFFFFF',
                                   }}
                                   d="M373.029,43.886c-49.137,0-92.317,25.503-117.029,63.993
-                          c-24.712-38.489-67.891-63.993-117.029-63.993C62.22,43.886,0,106.105,0,182.857c0,90.699,67.291,141.41,134.583,194.073
-                          C194.493,423.816,256,468.114,256,468.114s61.509-44.298,121.417-91.184C444.709,324.267,512,273.556,512,182.857
-                          C512,106.105,449.78,43.886,373.029,43.886z"
+                            c-24.712-38.489-67.891-63.993-117.029-63.993C62.22,43.886,0,106.105,0,182.857c0,90.699,67.291,141.41,134.583,194.073
+                            C194.493,423.816,256,468.114,256,468.114s61.509-44.298,121.417-91.184C444.709,324.267,512,273.556,512,182.857
+                            C512,106.105,449.78,43.886,373.029,43.886z"
                                 />
                                 <path
                                   style={{
@@ -518,7 +547,7 @@ const Home = () => {
                                         : '#FFFFFF',
                                   }}
                                   d="M256,107.878c-24.712-38.489-67.891-63.993-117.029-63.993C62.22,43.886,0,106.105,0,182.857
-                          c0,90.699,67.291,141.41,134.583,194.073C194.493,423.816,256,468.114,256,468.114S256,225.28,256,107.878z"
+                            c0,90.699,67.291,141.41,134.583,194.073C194.493,423.816,256,468.114,256,468.114S256,225.28,256,107.878z"
                                 />
                               </svg>
                               <span
@@ -568,11 +597,12 @@ const Home = () => {
       {showModal && selectedCategory && (
         <StoryModal
           stories={categoryStories[selectedCategory]}
-          currentStoryId={setCurrentStoryId}
+          currentStoryId={currentStoryId}
           onClose={closeStoryModal}
           isVideo={isVideo}
           getYouTubeId={getYouTubeId}
-          likeCounts={likeCounts}
+          bookmarks={bookmarks}
+          isLoggedIn={isLoggedIn}
           likedStories={likedStories}
           handleShareClick={handleShareClick}
           handleBookmarkClick={handleBookmarkClick}
