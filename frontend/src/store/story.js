@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { jwtDecode } from 'jwt-decode';
 import toast from 'react-hot-toast';
+const Backend_URL = 'https://feeds-feoj.onrender.com';
 
 export const useStoryStore = create((set, get) => ({
   stories: [],
@@ -29,7 +30,7 @@ export const useStoryStore = create((set, get) => ({
       return { success: false, message: 'Authorization token is missing.' };
     }
 
-    const res = await fetch('api/story', {
+    const res = await fetch(`${Backend_URL}/api/story`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -55,7 +56,7 @@ export const useStoryStore = create((set, get) => ({
     console.log('token before fetch', token);
 
     try {
-      const res = await fetch('/api/story', {
+      const res = await fetch(`${Backend_URL}/api/story`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +109,7 @@ export const useStoryStore = create((set, get) => ({
     }
 
     try {
-      const res = await fetch(`/api/story/${storyId}`, {
+      const res = await fetch(`${Backend_URL}/api/story/${storyId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -179,13 +180,16 @@ export const useStoryStore = create((set, get) => ({
       let filteredStories = [];
 
       // Fetch filtered stories based on the category
-      const res = await fetch(`/api/story/filter?category=${category}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }), // Add token if the user is logged in
-        },
-      });
+      const res = await fetch(
+        `${Backend_URL}/api/story/filter?category=${category}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }), // Add token if the user is logged in
+          },
+        }
+      );
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -270,8 +274,8 @@ export const useStoryStore = create((set, get) => ({
 
       // Determine the URL and method based on whether it's a bookmark or unbookmark
       const url = isBookmarked
-        ? `/api/story/bookmark/${storyId}`
-        : '/api/story/bookmark';
+        ? `${Backend_URL}/api/story/bookmark/${storyId}`
+        : `${Backend_URL}/api/story/bookmark`;
       const method = isBookmarked ? 'DELETE' : 'POST';
       const body = isBookmarked ? null : JSON.stringify({ storyId }); // Send storyId only when bookmarking
 
@@ -337,7 +341,7 @@ export const useStoryStore = create((set, get) => ({
     }
 
     try {
-      const res = await fetch(`/api/story/bookmark/`, {
+      const res = await fetch(`${Backend_URL}/api/story/bookmark/`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -387,7 +391,7 @@ export const useStoryStore = create((set, get) => ({
       // Check if likedBy is defined and determine if the story is liked
       const isLiked = story.likedBy && story.likedBy.includes(decodedToken._id);
 
-      const url = `/api/story/like/${storyId}`; // Use storyId in URL for DELETE
+      const url = `${Backend_URL}/api/story/like/${storyId}`; // Use storyId in URL for DELETE
       const method = isLiked ? 'DELETE' : 'POST';
 
       const res = await fetch(url, {
@@ -431,7 +435,7 @@ export const useStoryStore = create((set, get) => ({
     try {
       if (!token) {
         // Fetch all stories and their like counts (publicly accessible, no login required)
-        const res = await fetch('/api/story/like', {
+        const res = await fetch(`${Backend_URL}/api/story/like`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -461,7 +465,7 @@ export const useStoryStore = create((set, get) => ({
       }
 
       // Logged-in user: Fetch liked stories and their like counts
-      const res = await fetch('/api/story/like', {
+      const res = await fetch(`${Backend_URL}/api/story/like`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -506,7 +510,7 @@ export const useStoryStore = create((set, get) => ({
     // console.log('storyIdssss', storyId);
 
     try {
-      const res = await fetch(`/api/story/share/`, {
+      const res = await fetch(`${Backend_URL}/api/story/share/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
