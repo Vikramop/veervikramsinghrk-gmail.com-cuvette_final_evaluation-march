@@ -41,7 +41,7 @@
 }
 
 .box1 {
-  background-image: url('https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600');
+  background-image: url('https://images.pexels.com/photos/57901/pexels-photo-57901.jpeg');
 }
 .box2 {
   background-image: url('https://images.pexels.com/photos/4747325/pexels-photo-4747325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
@@ -50,13 +50,13 @@
   background-image: url('https://assets-prd.ignimgs.com/2021/12/21/valorant-1640045685890.jpg?width=300&crop=1%3A1%2Csmart&auto=webp');
 }
 .box4 {
-  background-image: url('https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600');
+  background-image: url('https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
 }
 .box5 {
-  background-image: url('https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600');
+  background-image: url('https://images.pexels.com/photos/1245055/pexels-photo-1245055.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
 }
 .box6 {
-  background-image: url('https://images.pexels.com/photos/3944377/pexels-photo-3944377.jpeg?auto=compress&cs=tinysrgb&w=600');
+  background-image: url('https://images.pexels.com/photos/9131012/pexels-photo-9131012.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1  ');
 }
 
 .filter-sec {
@@ -126,6 +126,7 @@
   transition: transform 0.5s ease;
   /* overflow: hidden; */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
 }
 
 .story-card:hover {
@@ -342,13 +343,14 @@
   height: 50px;
   cursor: pointer;
 }
-
-.line {
-  color: #8e8e8e;
-}
-
-.active {
-  color: white;
+.download-btn {
+  position: absolute;
+  background-color: transparent;
+  border: none;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  bottom: 10px;
 }
 
 /* ///////////////////////////////////// */
@@ -389,8 +391,9 @@
   }
 
   .story-card {
-    width: 100%; /* Full width on mobile */
-    min-height: 600px; /* Adjust height based on content */
+    width: 100%;
+    min-height: 600px;
+    margin: 1rem 0;
   }
 
   .no-feed {
@@ -408,10 +411,4 @@
   .modal-next-btn {
     right: 0;
   }
-}
-
-/* Ensure buttons are responsive */
-.more-btn {
-  width: 100%; /* Full width for mobile */
-  padding: 10px 0; /* Adjusted padding */
 }
