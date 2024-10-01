@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/auth';
+const API_URL = 'https://feeds-feoj.onrender.com/api/auth';
 
 export const userAuthStore = create((set) => ({
   user: null,
@@ -20,6 +20,7 @@ export const userAuthStore = create((set) => ({
       set({
         user: response.data.user,
         isAuthenticated: false,
+        isLoading: false,
       });
       console.log('response', response.data);
       return response;
