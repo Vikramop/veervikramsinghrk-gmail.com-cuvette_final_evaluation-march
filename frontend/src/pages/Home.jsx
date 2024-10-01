@@ -11,6 +11,7 @@ import StoryModal from '../components/StoryModal .jsx';
 
 const Home = () => {
   const token = localStorage.getItem('token');
+
   const {
     fetchStory,
     stories,
@@ -18,6 +19,7 @@ const Home = () => {
     bookmarks,
     toggleLike,
     shareStory,
+    getLikedStories,
   } = useStoryStore();
   const [likedStories, setLikedStories] = useState([]);
   const [likeCounts, setLikeCounts] = useState({});
@@ -62,7 +64,7 @@ const Home = () => {
   };
   const [categoryStories, setCategoryStories] = useState({
     userStories: [],
-    Foods: [],
+    Food: [],
     Sports: [],
     Gaming: [],
     India: [],
@@ -81,7 +83,7 @@ const Home = () => {
 
   const predefinedCategories = [
     'India',
-    'Foods',
+    'Food',
     'Sports',
     'Gaming',
     'People',
@@ -178,27 +180,77 @@ const Home = () => {
     );
     return match ? match[1] : null; // Return the video ID if found
   };
-  const handleLikeClick = async (storyId) => {
-    const isLiked = likedStories.includes(storyId);
 
-    // Toggle like state in the UI
+  // ////////////////////////////////
+  useEffect(() => {
+    const fetchLikedStoriesFromLocalStorage = () => {
+      const storedLikes = localStorage.getItem('likedStories');
+      if (storedLikes) {
+        const parsedLikes = JSON.parse(storedLikes);
+        setLikedStories(parsedLikes);
+      } else {
+        console.log('No liked stories found in local storage.');
+      }
+    };
+
+    fetchLikedStoriesFromLocalStorage();
+  }, []);
+  useEffect(() => {
+    const fetchLikedStories = async () => {
+      const response = await getLikedStories(); // Fetch liked stories from backend or local storage
+      console.log('Fetched liked stories:', response); // Log the entire response
+
+      if (response && Array.isArray(response.likedStories)) {
+        setLikedStories(response.likedStories); // Set the likedStories array from the response
+      } else {
+        console.error(
+          'Fetched liked stories is not an array:',
+          response.likedStories
+        );
+        setLikedStories([]); // Reset to an empty array if it's not an array
+      }
+    };
+
+    fetchLikedStories();
+  }, []);
+
+  const handleLikeClick = async (storyId) => {
+    if (!isLoggedIn) {
+      toast.error('Please log in to like stories.');
+      return;
+    }
+
+    // Use the updated likedStories state which is an array
+    const isLiked =
+      likedStories &&
+      Array.isArray(likedStories) &&
+      likedStories.some((story) => story._id === storyId);
+    console.log('isLiked', isLiked);
+
     if (isLiked) {
       // Remove from liked stories
-      setLikedStories((prevLikes) => prevLikes.filter((id) => id !== storyId));
+      setLikedStories((prevLikes) => {
+        const newLikes = prevLikes.filter((story) => story._id !== storyId);
+        localStorage.setItem('likedStories', JSON.stringify(newLikes)); // Persisting to local storage
+        return newLikes;
+      });
       setLikeCounts((prevCounts) => ({
         ...prevCounts,
         [storyId]: (prevCounts[storyId] || 0) - 1, // Decrease like count
       }));
     } else {
       // Add to liked stories
-      setLikedStories((prevLikes) => [...prevLikes, storyId]);
+      setLikedStories((prevLikes) => {
+        const newLikes = [...prevLikes, { _id: storyId }]; // Add a new object with the storyId
+        localStorage.setItem('likedStories', JSON.stringify(newLikes)); // Persisting to local storage
+        return newLikes;
+      });
       setLikeCounts((prevCounts) => ({
         ...prevCounts,
         [storyId]: (prevCounts[storyId] || 0) + 1, // Increase like count
       }));
     }
 
-    // Now call the backend API to persist the like
     await toggleLike(storyId, isLiked);
   };
 
@@ -336,10 +388,7 @@ const Home = () => {
 
           {/* Stories by Categories */}
           {predefinedCategories.map((category) => {
-            // console.log('categoryStories:', categoryStories);
-            // console.log('category:', category);
             const stories = categoryStories[category] || [];
-            // console.log('storiessss', stories);
 
             return (
               <div key={category} className="category-container">
@@ -351,10 +400,13 @@ const Home = () => {
                     stories
                       .slice(0, categoryShowAll[category] ? stories.length : 4)
                       .map((story) => {
-                        const isLiked = likedStories.includes(story._id);
+                        const isLiked = likedStories.some(
+                          (likedStory) => likedStory._id === story._id
+                        );
                         const likeCount = likeCounts[story._id] || 0;
+                        console.log('isLiked', isLiked);
+
                         const isBookmarked = bookmarks.includes(story._id);
-                        // console.log('isBookmarked', isBookmarked);
 
                         return (
                           <div
@@ -401,8 +453,12 @@ const Home = () => {
                                 </p>
                               </div>
                             )}
+                            {/*  button sec  */}
                             <button
-                              onClick={() => handleBookmarkClick(story._id)} // Call toggleBookmark with story ID
+                              onClick={(event) => {
+                                event.stopPropagation(); // Prevent the modal from opening
+                                handleBookmarkClick(story._id);
+                              }}
                               className="bookmarks"
                             >
                               <svg
@@ -412,12 +468,12 @@ const Home = () => {
                                   isBookmarked && isLoggedIn
                                     ? '#0000FF'
                                     : '#000'
-                                } // Change to blue if bookmarked
+                                }
                                 fill={
                                   isBookmarked && isLoggedIn
                                     ? '#0000FF'
                                     : '#FFF'
-                                } // Change to blue if bookmarked
+                                }
                                 viewBox="0 0 30 30"
                                 width="30px"
                                 height="30px"
@@ -428,7 +484,10 @@ const Home = () => {
                             </button>
 
                             <button
-                              onClick={() => handleLikeClick(story._id)} // Call toggleLike with story ID
+                              onClick={(event) => {
+                                event.stopPropagation(); // Prevent the modal from opening
+                                handleLikeClick(story._id); // Call toggleLike with story ID
+                              }}
                               className={`like-btn ${isLiked ? 'liked' : ''}`} // Conditionally apply the 'liked' class
                             >
                               <svg
@@ -447,9 +506,9 @@ const Home = () => {
                                         : '#FFFFFF',
                                   }}
                                   d="M373.029,43.886c-49.137,0-92.317,25.503-117.029,63.993
-	c-24.712-38.489-67.891-63.993-117.029-63.993C62.22,43.886,0,106.105,0,182.857c0,90.699,67.291,141.41,134.583,194.073
-	C194.493,423.816,256,468.114,256,468.114s61.509-44.298,121.417-91.184C444.709,324.267,512,273.556,512,182.857
-	C512,106.105,449.78,43.886,373.029,43.886z"
+                          c-24.712-38.489-67.891-63.993-117.029-63.993C62.22,43.886,0,106.105,0,182.857c0,90.699,67.291,141.41,134.583,194.073
+                          C194.493,423.816,256,468.114,256,468.114s61.509-44.298,121.417-91.184C444.709,324.267,512,273.556,512,182.857
+                          C512,106.105,449.78,43.886,373.029,43.886z"
                                 />
                                 <path
                                   style={{
@@ -459,7 +518,7 @@ const Home = () => {
                                         : '#FFFFFF',
                                   }}
                                   d="M256,107.878c-24.712-38.489-67.891-63.993-117.029-63.993C62.22,43.886,0,106.105,0,182.857
-	c0,90.699,67.291,141.41,134.583,194.073C194.493,423.816,256,468.114,256,468.114S256,225.28,256,107.878z"
+                          c0,90.699,67.291,141.41,134.583,194.073C194.493,423.816,256,468.114,256,468.114S256,225.28,256,107.878z"
                                 />
                               </svg>
                               <span
@@ -470,13 +529,16 @@ const Home = () => {
                                 }}
                               >
                                 {likeCount}
-                              </span>{' '}
+                              </span>
                             </button>
 
                             <button className="share">
                               <img
                                 src={share}
-                                onClick={() => handleShareClick(story._id)}
+                                onClick={(event) => {
+                                  event.stopPropagation(); // Prevent the modal from opening
+                                  handleShareClick(story._id);
+                                }}
                               />
                             </button>
                           </div>

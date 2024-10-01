@@ -58,7 +58,7 @@ const Filters = ({ onCategorySelect }) => {
         Gaming
       </div>
       <div className="box4" onClick={() => handleCategoryClick('Food')}>
-        Foods
+        Food
       </div>
       <div className="box5" onClick={() => handleCategoryClick('People')}>
         People

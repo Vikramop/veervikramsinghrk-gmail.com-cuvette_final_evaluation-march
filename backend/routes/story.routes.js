@@ -5,6 +5,7 @@ import {
   deleteStory,
   filterStoriesByCategory,
   getBookmarkedStories,
+  getLikedStories,
   getStories,
   likeStory,
   removeBookmark,
@@ -32,6 +33,7 @@ router.delete('/bookmark/:storyId', verifyToken, removeBookmark);
 
 router.post('/like/:storyId', verifyToken, likeStory);
 router.delete('/like/:storyId', verifyToken, unlikeStory);
+router.get('/like', verifyToken, getLikedStories);
 
 router.post('/share', shareStory);
 

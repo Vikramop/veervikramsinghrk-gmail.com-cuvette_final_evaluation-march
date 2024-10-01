@@ -24,6 +24,12 @@ const userSchema = new mongoose.Schema(
         ref: 'Story',
       },
     ],
+    likedStories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Story',
+      },
+    ],
   },
   { timestamps: true }
 );

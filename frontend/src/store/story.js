@@ -430,6 +430,52 @@ export const useStoryStore = create((set, get) => ({
     }
   },
 
+  getLikedStories: async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      toast.error('Please log in to view liked stories.');
+      return { likedStories: [], likeCounts: [] }; // Return empty arrays if not logged in
+    }
+
+    try {
+      const res = await fetch('/api/story/like', {
+        // Update to the correct endpoint
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to fetch liked stories');
+      }
+
+      const likedStories = data.data; // Assuming the API response has a 'data' property with the liked stories
+      const likeCounts = likedStories.map((story) => story.likes); // Example of extracting like counts
+
+      // Update the store with liked stories
+      set((prev) => ({
+        stories: prev.stories.map((s) => ({
+          ...s,
+          isLiked: likedStories.some((likedStory) => likedStory._id === s._id), // Check if the story is liked
+        })),
+      }));
+
+      toast.success('Liked stories fetched successfully');
+
+      return { likedStories, likeCounts }; // Return liked stories and like counts
+    } catch (error) {
+      console.error('Error fetching liked stories:', error);
+      toast.error(
+        error.message || 'An error occurred while fetching liked stories'
+      );
+      return { likedStories: [], likeCounts: [] }; // Return empty arrays on error
+    }
+  },
+
   shareStory: async (storyId) => {
     // console.log('storyIdssss', storyId);
 

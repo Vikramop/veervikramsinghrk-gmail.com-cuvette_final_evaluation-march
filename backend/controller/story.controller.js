@@ -388,6 +388,27 @@ export const unlikeStory = async (req, res) => {
   }
 };
 
+export const getLikedStories = async (req, res) => {
+  try {
+    // Find the user by their ID and populate likedStories
+    const user = await User.findById(req.userId).populate('likedStories');
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
+    }
+
+    // Find stories liked by the user
+    const likedStories = await Story.find({ likedBy: req.userId });
+
+    // Return the liked stories
+    res.status(200).json({ success: true, data: likedStories });
+  } catch (error) {
+    console.error('Error fetching liked stories:', error.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
 export const shareStory = async (req, res) => {
   const { storyId } = req.body;
 

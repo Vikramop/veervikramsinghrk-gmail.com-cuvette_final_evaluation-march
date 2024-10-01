@@ -151,7 +151,7 @@
   min-height: 100%;
   width: auto;
   height: auto;
-  z-index: 1; /* Behind the content */
+  z-index: 9; /* Behind the content */
   transform: translate(-50%, -50%);
   object-fit: cover; /* Cover the entire card */
 }
@@ -164,22 +164,8 @@
 
   overflow: hidden;
   border-radius: 10px;
-  z-index: 0; /* Behind the content */
+  z-index: 9; /* Behind the content */
 }
-
-/* .story-heading {
-  font-size: 18px;
-  font-weight: bold;
-  margin: 0 10px 60px 10px;
-
-  color: #fff;
-}
-
-.story-description {
-  font-size: 14px;
-  margin: 0 10px 60px 10px;
-  color: #ddd;
-} */
 
 .story-heading,
 .story-description {
@@ -246,7 +232,9 @@
   text-align: center;
   margin-bottom: 20px;
 }
-
+.btn-container {
+  background-color: rgb(248, 245, 245);
+}
 .like-btn {
   position: absolute;
   bottom: 10px;
