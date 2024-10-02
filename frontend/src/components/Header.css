@@ -75,7 +75,10 @@
 
 .bookmark-btn,
 .add-story-btn,
-.logout-btn {
+.bookmark-btn-desk,
+.add-story-btn-desk,
+.logout-btn,
+.add-story-btn-desk {
   padding: 0.5rem 1.6rem;
   border: none;
   border-radius: 15px;
@@ -84,7 +87,8 @@
   color: white;
   cursor: pointer;
 }
-.bookmark-btn {
+.bookmark-btn,
+.bookmark-btn-desk {
   padding: 0.5rem 1.8rem;
 }
 .hamburger-btn {
@@ -106,13 +110,6 @@
 
 @media (min-width: 768px) {
   .header-items-mob {
-    display: none;
-  }
-
-  .reg-btn-desk {
-    display: none;
-  }
-  .signin-btn-desk {
     display: none;
   }
 }
