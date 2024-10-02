@@ -14,7 +14,9 @@
 }
 
 .reg-btn,
-.signin-btn {
+.signin-btn,
+.reg-btn-desk,
+.signin-btn-desk {
   border-radius: 30px;
   padding: 0.6rem 1.2rem;
   font-size: 18px;
@@ -25,12 +27,14 @@
   margin: 0 0.5rem;
 }
 
-.reg-btn {
+.reg-btn,
+.reg-btn-desk {
   background-color: #ff7373;
   border-color: #ff7373;
 }
 
-.signin-btn {
+.signin-btn,
+.signin-btn-desk {
   background-color: #73abff;
   border-color: #73abff;
 }
@@ -98,4 +102,45 @@
   top: 5px;
   margin: 0 2px;
   cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .header-items-mob {
+    display: none;
+  }
+
+  .reg-btn-desk {
+    display: none;
+  }
+  .signin-btn-desk {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .bookmark-btn-desk {
+    display: none;
+  }
+  .add-story-btn-desk {
+    display: none;
+  }
+
+  .profile-section {
+    display: flex; /* Show hamburger menu */
+  }
+
+  .menu-modal-mob {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Show menu when open */
+    position: absolute;
+    top: 80px;
+    right: 0px;
+    left: 0px;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    z-index: 999;
+    width: 100%;
+  }
 }

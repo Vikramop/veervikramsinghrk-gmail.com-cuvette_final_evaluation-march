@@ -104,7 +104,10 @@ const Header = ({ setLikedStories, setLikeCounts }) => {
         <>
           <div className="header-items">
             <div className="book">
-              <button className="bookmark-btn" onClick={handleBookmarkClick}>
+              <button
+                className="bookmark-btn-desk"
+                onClick={handleBookmarkClick}
+              >
                 Bookmarks
               </button>
 
@@ -120,7 +123,7 @@ const Header = ({ setLikedStories, setLikeCounts }) => {
               </svg>
             </div>
             <button
-              className="add-story-btn"
+              className="add-story-btn-desk"
               onClick={() => {
                 setShowStoryModal(true);
               }}
@@ -174,6 +177,37 @@ const Header = ({ setLikedStories, setLikeCounts }) => {
           {menuOpen && (
             <div className="menu-modal">
               <p>{user.userName}</p>
+              <div className="header-items-mob">
+                <div className="book">
+                  <button
+                    className="bookmark-btn"
+                    onClick={handleBookmarkClick}
+                  >
+                    Bookmarks
+                  </button>
+
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="#FFF"
+                    viewBox="0 0 30 30"
+                    width="25px"
+                    height="25px"
+                  >
+                    {' '}
+                    <path d="M23,27l-8-7l-8,7V5c0-1.105,0.895-2,2-2h12c1.105,0,2,0.895,2,2V27z" />
+                  </svg>
+                </div>
+                <button
+                  className="add-story-btn"
+                  onClick={() => {
+                    setShowStoryModal(true);
+                  }}
+                >
+                  Add Story
+                </button>
+
+                <div className="profile-section"></div>
+              </div>
               <button className="logout-btn" onClick={handleLogout}>
                 Logout
               </button>
@@ -183,7 +217,7 @@ const Header = ({ setLikedStories, setLikeCounts }) => {
       ) : (
         <div>
           <button
-            className="reg-btn"
+            className="reg-btn-desk"
             onClick={() => {
               setModalHeading('Register');
               setShowModal(true);
@@ -193,7 +227,7 @@ const Header = ({ setLikedStories, setLikeCounts }) => {
           </button>
 
           <button
-            className="signin-btn"
+            className="signin-btn-desk"
             onClick={() => {
               setModalHeading('Login');
               setShowModal(true);
